@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+eggs/
+sdist/
+wheels/
+*.egg
+.eggs/
+*.manifest
+*.spec
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ===========================================================================
+# PROTECTED — unpublished manuscript, tables, and novel analysis outputs
+# These contain findings from a paper currently under review.
+# They will be un-ignored upon publication.
+# ===========================================================================
+paper/
+Tables/
+00_stacked_regions_800ka/
+
+# Generated output (not tracked — run scripts to regenerate)
+outputs/
+figures/
+figures_new/
+示例图/
+
+# Large binary / non-code files
+*.pdf
+# *.docx   # keep the paper tracked
+*.png
+*.jpg
+*.npy
+*.pkl
+
+# Environment
+.env
+.env.local
+
+# Claude (session data, not source)
+.claude/

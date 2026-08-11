@@ -1,0 +1,165 @@
+"""
+Central configuration for CARC analysis.
+
+Override defaults by setting environment variables:
+    CARC_DATA_DIR, CARC_ERROR_DIR, CARC_OUTPUT_DIR, CARC_FIGURE_DIR
+
+Record-specific age-model mappings (SPECIAL_SIGMA, RECORD_AGE_MODEL,
+TIER1_FILES, TIER1_SIGMA) are populated with the data used in the paper.
+Override by setting a ``CARC_CONFIG_OVERRIDE`` env var pointing to a Python
+file whose assignments are exec'd after the defaults.
+"""
+
+import os
+import numpy as np
+
+# ---------------------------------------------------------------------------
+# Paths — set via environment variable or default to project-relative
+# ---------------------------------------------------------------------------
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+DATA_DIR = os.environ.get(
+    "CARC_DATA_DIR",
+    os.path.join(PROJECT_ROOT, "proxy_records")
+)
+ERROR_DIR = os.environ.get(
+    "CARC_ERROR_DIR",
+    os.path.join(PROJECT_ROOT, "proxy_errors")
+)
+OUTPUT_DIR = os.environ.get(
+    "CARC_OUTPUT_DIR",
+    os.path.join(PROJECT_ROOT, "outputs")
+)
+FIGURE_DIR = os.environ.get(
+    "CARC_FIGURE_DIR",
+    os.path.join(PROJECT_ROOT, "figures")
+)
+
+# ---------------------------------------------------------------------------
+# Analysis time windows
+# ---------------------------------------------------------------------------
+AGE_MIN_10_60 = 10.0   # ka
+AGE_MAX_10_60 = 60.0   # ka
+AGE_MIN_800 = 0.0      # ka
+AGE_MAX_800 = 800.0    # ka
+
+DT_HIGH_RES = 0.05     # ka — 50-year interpolation
+DT_LOW_RES = 1.0       # ka — 1-kyr interpolation (800 ka analysis)
+
+AGE_GRID_10_60 = np.arange(AGE_MIN_10_60, AGE_MAX_10_60 + DT_HIGH_RES, DT_HIGH_RES)
+AGE_GRID_800 = np.arange(AGE_MIN_800, AGE_MAX_800 + DT_LOW_RES, DT_LOW_RES)
+
+# ---------------------------------------------------------------------------
+# CARC method parameters
+# ---------------------------------------------------------------------------
+N_PERTURB = 200               # Number of age perturbations (default)
+ARC_ALPHA = 0.5                # Conservative ARC stripping strength
+MAX_GRANGER_LAG = 5            # Maximum VAR lag order
+ALPHA_LEVEL = 0.05             # Granger significance threshold
+STABILITY_THRESHOLD = 0.95     # Honesty filter threshold
+MIN_POINTS_IN_EVENT = 5        # Minimum data points in event window
+NOISE_STD = 0.05               # Additive noise std in robustness tests
+
+# ---------------------------------------------------------------------------
+# Climate state windows (ka) — published, well-known periods
+# ---------------------------------------------------------------------------
+CLIMATE_WINDOWS = {
+    'H1 event':               (14.0, 18.0),
+    'H4 event':               (36.0, 40.0),
+    'Bølling-Allerød':        (12.7, 14.7),
+    'Last Glacial Maximum':   (19.0, 26.0),
+    'GI-12 (interstadial)':   (44.0, 47.0),
+    'GS-12 (stadial)':        (47.0, 49.0),
+}
+
+# ---------------------------------------------------------------------------
+# Age model sigma by type (ka, 1σ) — from published literature
+# ---------------------------------------------------------------------------
+AGE_MODEL_SIGMA = {
+    'AICC2012': 1.5, 'GICC05': 0.8, 'LR04': 2.0,
+    'EDC3': 1.5, 'Speleothem': 0.5, 'Orbitally-tuned': 2.5,
+    '14C': 1.0, 'Tephra': 1.0, 'Mixed': 1.5
+}
+
+DEFAULT_SIGMA = {
+    'ice_core': 1.0, 'marine': 2.0, 'speleothem': 0.5,
+    'loess': 2.5, 'lake': 1.5, 'other': 2.0
+}
+
+# ---------------------------------------------------------------------------
+# Per-record age-model overrides
+# ---------------------------------------------------------------------------
+# Override map: record_name → age-model name (e.g. 'NGRIP_d18O': 'GICC05')
+RECORD_AGE_MODEL = {
+    # Ice cores — AICC2012 / GICC05
+    '32_Jouzel-2007-dD':                        'AICC2012',
+    '32_Bereiter et al.-2015-GRL-revised CO2 ': 'AICC2012',
+    '32_CH4 over past 800kyr':                  'AICC2012',
+    '32_EDC-dust-2012-no NaN':                  'AICC2012',
+    '33_Dome fuji 2018 d18O':                   'AICC2012',
+    '33_Dome fuji-dD':                          'AICC2012',
+    'Erhardt_NGRIP_aerosol_d18O_step1':         'GICC05',
+    # Marine — LR04 / orbitally-tuned
+    '2_ODP983-IRD':                             'LR04',
+    '3_ODP980-δ18O_Planktic':                   'LR04',
+    '3_Mcmanus-ODP980-d18O':                    'LR04',
+    '6_313-U1308_rpi':                          'LR04',
+    '9_U1385-Ca-Ti':                            'LR04',
+    '9_U1385=Zr-Sr LR04 age model':             'LR04',
+    '16_MD2622ODP1002-Mo':                      '14C',
+    # Speleothems — U-Th
+    '14_cheng2016composite-noaa':               'Speleothem',
+}
+
+# Override map: record_name → sigma_ka (1σ age uncertainty)
+SPECIAL_SIGMA = {
+    # Tier 1 records (from published age-model literature, matched to Table S1)
+    'Erhardt_NGRIP_aerosol_d18O_step1':         0.65,
+    '32_Jouzel-2007-dD':                        0.83,
+    '32_Bereiter et al.-2015-GRL-revised CO2 ': 1.65,
+    '32_CH4 over past 800kyr':                  1.66,
+    '16_MD2622ODP1002-Mo':                      0.23,
+    '14_cheng2016composite-noaa':               0.14,
+    # Other high-quality records
+    '33_Dome fuji 2018 d18O':                   1.50,
+    '33_Dome fuji-dD':                          1.50,
+    '2_ODP983-IRD':                             2.00,
+}
+
+# Tier 1 core records (Table 1–4 in paper): label → filename in proxy_records/
+TIER1_FILES = {
+    'NGRIP_d18O':      'Erhardt_NGRIP_aerosol_d18O_step1.csv',
+    'EDC_dD':          '32_Jouzel-2007-dD.csv',
+    'EDC_CO2':         '32_Bereiter et al.-2015-GRL-revised CO2 .xlsx',
+    'EDC_CH4':         '32_CH4 over past 800kyr.csv',
+    'Cariaco_Mo':      '16_MD2622ODP1002-Mo.csv',
+    'Cheng2016_d18O':  '14_cheng2016composite-noaa.xlsx',
+}
+
+# Tier 1 sigma overrides: label → sigma_ka
+TIER1_SIGMA = {
+    'NGRIP_d18O':      0.65,
+    'EDC_dD':          0.83,
+    'EDC_CO2':         1.65,
+    'EDC_CH4':         1.66,
+    'Cariaco_Mo':      0.23,
+    'Cheng2016_d18O':  0.14,
+}
+
+# ---------------------------------------------------------------------------
+# Helper: get sigma for any record
+# ---------------------------------------------------------------------------
+def get_sigma(record_name):
+    """Return the age-model 1σ uncertainty (ka) for a given record.
+
+    Falls back to DEFAULT_SIGMA[archive_type] when no override exists.
+    """
+    if record_name in SPECIAL_SIGMA:
+        return SPECIAL_SIGMA[record_name]
+    age_model = RECORD_AGE_MODEL.get(record_name, 'Mixed')
+    return AGE_MODEL_SIGMA.get(age_model, 1.5)
+
+
+# Ensure output directories exist
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs(FIGURE_DIR, exist_ok=True)

@@ -1,0 +1,17 @@
+# Auto-detect text files
+* text=auto
+
+# CSV data files — consistent LF line endings
+*.csv text eol=lf
+
+# Python source
+*.py text eol=lf diff=python
+
+# Documentation
+*.md text eol=lf diff=markdown
+
+# Configuration
+*.txt text eol=lf
+*.toml text eol=lf
+*.cfg text eol=lf
+*.cff text eol=lf

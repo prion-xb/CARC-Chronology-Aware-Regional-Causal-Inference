@@ -1,0 +1,26 @@
+# CARC: Chronology-Aware Robustness Causality
+# Core scientific computing
+numpy>=1.24.0
+scipy>=1.11.0
+pandas>=2.0.0
+
+# Statistical modeling
+statsmodels>=0.14.0
+scikit-learn>=1.3.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+cartopy>=0.22.0
+
+# Data I/O
+openpyxl>=3.1.0
+
+# Optional: CCM method comparison (src/validation.py)
+# skccm
+
+# Optional: PCMCI method comparison (src/validation.py)
+# tigramite
+
+# Optional: Development/testing
+# pytest>=7.0
