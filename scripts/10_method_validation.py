@@ -15,11 +15,12 @@ import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings('ignore')
 
-from src.config import FIGURE_DIR
+from src.config import FIGURE_DIR, OUTPUT_DIR
 from src.validation import (PaleoDataGenerator, CausalMethodEvaluator,
                              granger_causality, ccm_causality)
 from src.arc import extract_residuals_adaptive
@@ -76,10 +77,22 @@ def validate_arc():
     print(f"{'Fixed α=0.5':<30} {audit_fixed['FPR']:>8.3f} {audit_fixed['TPR']:>8.3f}")
     print(f"{'Adaptive ARC':<30} {audit_arc['FPR']:>8.3f} {audit_arc['TPR']:>8.3f}")
 
-    # Plot
+    # Save results for reuse
+    arc_df = pd.DataFrame({
+        'method': ['Original Granger', 'Fixed α=0.5', 'Adaptive ARC'],
+        'fpr': [audit_orig['FPR'], audit_fixed['FPR'], audit_arc['FPR']],
+        'tpr': [audit_orig['TPR'], audit_fixed['TPR'], audit_arc['TPR']],
+    })
+    arc_df.to_csv(os.path.join(OUTPUT_DIR, 'method_validation_arc.csv'),
+                  index=False)
+
+    _plot_arc(arc_df)
+
+
+def _plot_arc(df):
     methods = ['Original\nGranger', 'Fixed α=0.5', 'Adaptive\nARC']
-    fprs = [audit_orig['FPR'], audit_fixed['FPR'], audit_arc['FPR']]
-    tprs = [audit_orig['TPR'], audit_fixed['TPR'], audit_arc['TPR']]
+    fprs = df['fpr'].values
+    tprs = df['tpr'].values
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
     ax1.bar(methods, fprs, color=['#d62728', '#1f77b4', '#2ca02c'])
@@ -89,8 +102,12 @@ def validate_arc():
     ax2.set_ylabel('TPR'); ax2.set_title('True Positive Rate')
     for ax in [ax1, ax2]:
         for bar in ax.patches:
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01,
-                    f'{bar.get_height():.3f}', ha='center')
+            h = bar.get_height()
+            # tall bars: put the value inside the bar top so it cannot reach
+            # the panel title above (layout QA: text_overlap with title)
+            ax.text(bar.get_x() + bar.get_width() / 2, h + 0.005,
+                    f'{h:.3f}', ha='center',
+                    va='top' if h > 0.2 else 'baseline')
     plt.tight_layout()
     plt.savefig(os.path.join(FIGURE_DIR, 'arc_validation.png'), dpi=150)
     plt.close()
@@ -117,9 +134,21 @@ def audit_ccm():
         fpr_vals.append(audit['FPR'])
         print(f"  φ={phi:.2f} → TPR={audit['TPR']:.3f}, FPR={audit['FPR']:.3f}")
 
+    # Save results for reuse
+    ccm_df = pd.DataFrame({
+        'phi': phi_range,
+        'tpr': tpr_vals,
+        'fpr': fpr_vals,
+    })
+    ccm_df.to_csv(os.path.join(OUTPUT_DIR, 'ccm_audit_phi.csv'), index=False)
+
+    _plot_ccm(ccm_df)
+
+
+def _plot_ccm(df):
     fig, ax = plt.subplots(figsize=(8, 5))
-    ax.plot(phi_range, tpr_vals, 'bo-', label='TPR', linewidth=2)
-    ax.plot(phi_range, fpr_vals, 'rs-', label='FPR', linewidth=2)
+    ax.plot(df['phi'], df['tpr'], 'bo-', label='TPR', linewidth=2)
+    ax.plot(df['phi'], df['fpr'], 'rs-', label='FPR', linewidth=2)
     ax.axhline(0.5, color='gray', linestyle='--', alpha=0.5)
     ax.set_xlabel('Autocorrelation coefficient φ')
     ax.set_ylabel('Rate')
@@ -132,6 +161,19 @@ def audit_ccm():
 
 
 if __name__ == "__main__":
-    validate_arc()
-    audit_ccm()
+    import argparse
+    parser = argparse.ArgumentParser(description='Method comparison and audit')
+    parser.add_argument('--plot-only', action='store_true',
+                        help='Skip the simulations; redraw figures from the '
+                             'cached CSVs in outputs/ (method_validation_arc.csv, '
+                             'ccm_audit_phi.csv)')
+    args = parser.parse_args()
+    if args.plot_only:
+        arc_df = pd.read_csv(os.path.join(OUTPUT_DIR, 'method_validation_arc.csv'))
+        ccm_df = pd.read_csv(os.path.join(OUTPUT_DIR, 'ccm_audit_phi.csv'))
+        _plot_arc(arc_df)
+        _plot_ccm(ccm_df)
+    else:
+        validate_arc()
+        audit_ccm()
     print("\nDone.")

@@ -109,7 +109,7 @@ class RecordFactory:
             return None
 
         archive_type, region = self.classify(stem)
-        sigma = get_sigma(stem)
+        sigma = get_sigma(stem, archive_type=archive_type)
 
         RecordClass = self._get_record_class(archive_type)
         rec = RecordClass(name=stem, age=age, value=value,

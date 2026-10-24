@@ -16,11 +16,11 @@ cartopy>=0.22.0
 # Data I/O
 openpyxl>=3.1.0
 
-# Optional: CCM method comparison (src/validation.py)
-# skccm
+# Table 2 reproduction (scripts/39_table2_zzf.py, PCMCI tester)
+tigramite>=5.0
 
-# Optional: PCMCI method comparison (src/validation.py)
-# tigramite
+# Optional: CCM cross-validation reference (src/validation.py)
+# pyEDM>=2.0  (Windows: install with legacy support)
 
 # Optional: Development/testing
 # pytest>=7.0

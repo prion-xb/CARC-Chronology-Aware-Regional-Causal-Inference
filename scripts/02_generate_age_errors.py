@@ -4,10 +4,17 @@
 -------------------------
 Batch-generate age-error CSV files for all paleoclimate proxy records.
 
-Maps each record to an age-model type and assigns per-point 1σ uncertainties
-based on the age model (GICC05, AICC2012, LR04, Speleothem U-Th, etc.).
+Uses ``src.config.get_sigma()`` as the **single source of truth** for all
+age-model 1σ uncertainties, ensuring consistency between the generated error
+files and the analysis pipeline (stacking, Granger causality, CARC).
 
-Output: data/proxy_errors/*_err.csv
+Resolution order (implemented in ``src.config.get_sigma``):
+1. ``SPECIAL_SIGMA`` — per-record published values (e.g. NGRIP=0.65 ka)
+2. ``RECORD_AGE_MODEL`` → ``AGE_MODEL_SIGMA`` — by named age model
+3. ``DEFAULT_SIGMA[archive_type]`` — by archive type
+4. 1.5 ka — universal fallback
+
+Output: proxy_errors/*_err.csv (two-column: age [ka], 1σ [ka])
 """
 
 import os, sys, glob
@@ -16,96 +23,87 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import pandas as pd
 import numpy as np
 
-from src.config import DATA_DIR, ERROR_DIR
-
-
-# ---------------------------------------------------------------------------
-# Age-model uncertainty functions (1σ, ka)
-# ---------------------------------------------------------------------------
-def lr04_uncertainty(age_ka):
-    if age_ka <= 1000:   return 4.0
-    elif age_ka <= 3000: return 10.0
-    else:                return 25.0
-
-def aicc2012_uncertainty(age_ka):
-    if age_ka <= 120:    return 0.5
-    elif age_ka <= 800:  return 0.5 + (3.0 - 0.5) / (800 - 120) * (age_ka - 120)
-    else:                return 3.0
-
-def loess_uncertainty(age_ka):       return 2.0
-def generic_orbital_uncertainty(age_ka): return 3.0
-def generic_ice_uncertainty(age_ka):     return 1.0
-def speleothem_uncertainty(age_ka):      return 0.3
-
-
-def infer_record_type(filename):
-    name = os.path.basename(filename).lower()
-    if any(k in name for k in ['odp', 'u130', 'md', 'ps75', 'kxy', 'ipwp',
-                               'cariaco', 'u1476', 'u1537', 'opd']):
-        return 'lr04'
-    if any(k in name for k in ['weinan', 'xifeng', 'gulang', 'luochuan',
-                               'jy10', 'jy12', 'xf06', 'loess', 'mgs']):
-        return 'loess'
-    if any(k in name for k in ['edc', 'edml', 'taldice', 'vostok', 'ngrip',
-                               'dome_fuji', 'dome fuji']):
-        return 'aicc2012'
-    if any(k in name for k in ['cheng2016', 'botuvera', 'santana', 'lapa',
-                               'marota', 'paixao', 'stalagmite', 'cave']):
-        return 'speleothem'
-    if 'ice' in name or 'dome' in name:
-        return 'icecore_other'
-    return 'generic_orbital'
-
-
-UNC_FUNCS = {
-    'lr04': lr04_uncertainty, 'loess': loess_uncertainty,
-    'aicc2012': aicc2012_uncertainty, 'speleothem': speleothem_uncertainty,
-    'icecore_other': generic_ice_uncertainty,
-    'generic_orbital': generic_orbital_uncertainty,
-}
+from src.config import DATA_DIR, ERROR_DIR, get_sigma
+from src.stacking import classify_record
 
 
 def generate_error_file(input_path, output_dir=None):
+    """Generate a per-point age-error CSV for a single record.
+
+    Reads the record's age column, looks up the correct sigma via
+    ``config.get_sigma()``, and writes a two-column CSV (age, sigma).
+
+    Parameters
+    ----------
+    input_path : str
+        Path to the raw proxy record CSV/XLSX file.
+    output_dir : str or None
+        Output directory (default: config.ERROR_DIR → proxy_errors/).
+    """
+    # --- load age column ---
     try:
-        df_raw = pd.read_csv(input_path, header=None, dtype=str)
+        if input_path.endswith('.xlsx'):
+            df_raw = pd.read_excel(input_path, engine='openpyxl')
+        else:
+            df_raw = pd.read_csv(input_path, header=None, dtype=str)
     except Exception as e:
-        print(f"Read failed {input_path}: {e}")
+        print(f"  SKIP {input_path}: read error ({e})")
         return
 
     if df_raw.shape[1] == 0:
+        print(f"  SKIP {input_path}: empty file")
         return
 
+    # First column is age
     age_series = pd.to_numeric(df_raw.iloc[:, 0], errors='coerce')
     valid_mask = ~age_series.isna()
     if not valid_mask.any():
+        print(f"  SKIP {input_path}: no valid ages")
         return
 
-    ages = age_series[valid_mask].values
-    rec_type = infer_record_type(input_path)
-    unc_func = UNC_FUNCS.get(rec_type, generic_orbital_uncertainty)
-    errors = np.array([unc_func(float(a)) for a in ages])
+    ages = age_series[valid_mask].values.astype(float)
 
-    out_df = pd.DataFrame({0: ages, 1: errors})
+    # --- determine sigma via the single source of truth ---
+    fname = os.path.basename(input_path)
+    stem = os.path.splitext(fname)[0]
+    typ, region = classify_record(fname)  # typ = 'ice_core' | 'marine' | ...
+    sigma = get_sigma(stem, archive_type=typ)
 
+    # --- build constant-uncertainty column ---
+    errors = np.full_like(ages, sigma)
+
+    # --- write ---
     if output_dir is None:
         output_dir = ERROR_DIR
     os.makedirs(output_dir, exist_ok=True)
 
-    base = os.path.basename(input_path)
-    name, _ = os.path.splitext(base)
-    out_path = os.path.join(output_dir, f"{name}_err.csv")
+    out_path = os.path.join(output_dir, f"{stem}_err.csv")
+    out_df = pd.DataFrame({0: ages, 1: errors})
     out_df.to_csv(out_path, index=False, header=False)
-    print(f"Generated: {out_path}  ({rec_type}, n={len(ages)})")
+    print(f"  {stem}: σ={sigma:.2f} ka ({typ}, {region or 'unclassified'}) → {out_path}")
 
 
 def batch_generate(input_dir=None, pattern="*.csv"):
+    """Generate error files for all records in *input_dir*."""
     if input_dir is None:
         input_dir = DATA_DIR
-    files = glob.glob(os.path.join(input_dir, "**", pattern), recursive=True)
-    files = [f for f in files if not f.endswith('_err.csv') and 'age_err' not in f]
-    print(f"Found {len(files)} files to process")
-    for f in files:
+
+    csv_files = sorted(glob.glob(os.path.join(input_dir, "*.csv")))
+    xlsx_files = sorted(glob.glob(os.path.join(input_dir, "*.xlsx")))
+    all_files = csv_files + xlsx_files
+
+    # Exclude files that are already error files
+    all_files = [f for f in all_files
+                 if not f.endswith('_err.csv') and 'age_err' not in f.lower()]
+
+    print(f"Found {len(all_files)} record files in {input_dir}")
+    print(f"Output directory: {ERROR_DIR}")
+    print()
+
+    for f in all_files:
         generate_error_file(f)
+
+    print(f"\nDone. {len(all_files)} error files generated.")
 
 
 if __name__ == "__main__":

@@ -25,6 +25,9 @@ from src.io import load_record, interpolate_to_grid, standardize
 from src.arc import arc_deconfound_batch
 from src.granger import granger_detect
 
+# Fixed seed: makes the perturbation ensemble exactly reproducible
+np.random.seed(42)
+
 # ---------------------------------------------------------------------------
 # Load and preprocess Tier 1 data
 # ---------------------------------------------------------------------------

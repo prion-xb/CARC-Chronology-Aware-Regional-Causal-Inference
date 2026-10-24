@@ -207,6 +207,9 @@ class CARCDetector(StandardGrangerDetector):
         Granger significance threshold.
     noise_std : float
         Observational noise fraction added per perturbation.
+    dt : float
+        Grid spacing in ka (default 1.0; use 0.05 for the 10–60 ka grid).
+        Converts age errors (ka) to grid index units in the perturbation.
     """
 
     def __init__(self,
@@ -215,7 +218,8 @@ class CARCDetector(StandardGrangerDetector):
                  arc_alpha=ARC_ALPHA,
                  maxlag=MAX_GRANGER_LAG,
                  alpha=ALPHA_LEVEL,
-                 noise_std=NOISE_STD):
+                 noise_std=NOISE_STD,
+                 dt=1.0):
         super().__init__(maxlag=maxlag, alpha=alpha)
         self._name = 'CARC'
         self._params.update({
@@ -228,6 +232,7 @@ class CARCDetector(StandardGrangerDetector):
         self._stability_threshold = stability_threshold
         self._arc_alpha = arc_alpha
         self._noise_std = noise_std
+        self._dt = dt
 
     # ------------------------------------------------------------------
     # ARC deconfounding
@@ -262,10 +267,14 @@ class CARCDetector(StandardGrangerDetector):
     # Age perturbation + robustness
     # ------------------------------------------------------------------
     def _age_perturb_pair(self, Y, X, sigma_err, rng):
-        """Apply age perturbation to both series. Returns (Yp, Xp)."""
+        """Apply age perturbation to both series. Returns (Yp, Xp).
+
+        ``sigma_err`` is the combined 1σ age uncertainty in PHYSICAL ka
+        units; converted to grid index units via ``self._dt``.
+        """
         n = len(Y)
         orig = np.arange(n)
-        pert = orig + rng.normal(0, sigma_err, n)
+        pert = orig + rng.normal(0, sigma_err / self._dt, n)
         idx = np.argsort(pert)
 
         fY = interp1d(pert[idx], Y[idx], kind='linear',

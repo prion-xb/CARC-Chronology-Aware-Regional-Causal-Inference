@@ -6,9 +6,10 @@ Generate publication-quality multi-panel figures for the CARC paper.
 
 Figures produced:
   Fig. 1  – Global proxy-record map with region highlights and quality encoding
-  Fig. 2  – Regional stacks (0–800 ka) with MIS windows and orbital forcing
+  Fig. 2  – Layer-1 stacking (0–800 ka): member records + median + P5–P95 spread,
+            MIS shading and orbital forcing
   Fig. 3  – Record quality summary (tier distribution, scores by type, etc.)
-  Fig. 4  – DDR causal network with geographic layout
+  Fig. 4  – Causal network from real detection rates (FigS_Causal_Network)
   Fig. 5  – Multi-panel method validation
   Fig. S1 – Record-level SNR & resolution comparison
 
@@ -32,11 +33,11 @@ from matplotlib.lines import Line2D
 from matplotlib import patheffects as pe
 import matplotlib.ticker as mticker
 from scipy.ndimage import gaussian_filter1d
-from scipy import stats
+from scipy import interpolate, stats
 import warnings
 warnings.filterwarnings('ignore')
 
-from src.config import FIGURE_DIR, DATA_DIR, OUTPUT_DIR
+from src.config import FIGURE_DIR, DATA_DIR, OUTPUT_DIR, AGE_GRID_800
 from src.visualization import (
     apply_style, CARC_COLORS, CARC_COLORS_LIGHT, CARC_PALETTE,
     CARC_DIVERGING_PAIRS, CARC_SEQUENTIAL,
@@ -70,30 +71,25 @@ def _load_or_fallback(path, fallback, label="results"):
     return fallback
 
 
-def _load_ddr_edges():
-    """Load DDR edge results from :file:`outputs/ddr_regional.csv`.
+def _load_pair_window_rates():
+    """Load detection rates for every region pair in every climate window
+    from :file:`outputs/regional_robustness_windows.csv` (real pipeline
+    results; each rate is the share of the 200 age-perturbation realizations
+    passing the causality test).
 
-    Expected columns: ``source, target, forward_rate, reverse_rate, ddr``.
-    Falls back to example values (with a UserWarning) when the file is missing.
+    Returns {(window, region_A, region_B): (A_to_B, B_to_A)}.  Raises
+    FileNotFoundError instead of falling back to example edges -- the
+    network figure must never show fabricated data.
     """
-    path = os.path.join(OUTPUT_DIR, "ddr_regional.csv")
-    df = _load_or_fallback(path, fallback=None, label="DDR edges")
-    if df is not None and not df.empty:
-        return [(r.source, r.target, r.forward_rate, r.reverse_rate, r.ddr)
-                for r in df.itertuples(index=False)]
-    # Fallback example edges — replace by running 07_regional_800ka.py
-    return [
-        ("North_Atlantic", "Antarctic",           0.72, 0.18, 4.00),
-        ("North_Atlantic", "Tropical_Marine",     0.65, 0.22, 2.95),
-        ("North_Atlantic", "East_Asian_Monsoon",  0.58, 0.25, 2.32),
-        ("Tropical_Marine", "East_Asian_Monsoon", 0.70, 0.15, 4.67),
-        ("Tropical_Marine", "Antarctic",          0.55, 0.20, 2.75),
-        ("Southern_Ocean",  "Antarctic",          0.80, 0.10, 8.00),
-        ("North_Atlantic", "South_America",       0.48, 0.28, 1.71),
-        ("Tropical_Marine", "South_America",      0.62, 0.18, 3.44),
-    ]
-
-# ============================================================================
+    path = os.path.join(OUTPUT_DIR, "regional_robustness_windows.csv")
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"{path} not found -- run scripts/09_regional_robustness.py "
+            f"first; the causal-network figure uses real detection rates "
+            f"only (no example fallback)")
+    df = pd.read_csv(path)
+    return {(r.window, r.region_A, r.region_B): (r.A_to_B, r.B_to_A)
+            for r in df.itertuples(index=False)}
 # Data loading helpers
 # ============================================================================
 
@@ -120,11 +116,46 @@ def load_stacked_regions(stacked_dir=None):
 
 
 def load_record_quality():
-    """Load record quality metrics from data_tiers_final.csv."""
-    path = os.path.join(os.path.dirname(__file__), '..', 'data', 'data_tiers_final.csv')
-    if os.path.exists(path):
-        return pd.read_csv(path)
-    return None
+    """Load quality metrics for the paper's canonical 80-record inventory.
+
+    The paper anchors every analysis on 80 records (Tier 1/2/3 = 7/48/25;
+    Table S2/S4/S5). The repository stores those 80 under their original
+    file-stem names (outputs/data_tiers_final.csv), while
+    data/region_assignment_80_paper.csv maps each paper record key
+    (canonical name — the same keys used by RECORD_COORDS) to its stem(s):
+    76 keys, four of which split into two stems each, for 80 rows total.
+
+    Returns one row per stem with columns:
+      Record (stem), Key (paper name), Tier, Region (paper region code),
+      Type, Composite_Score, SNR_Best, Resolution_Score.
+    """
+    here = os.path.dirname(__file__)
+    rmap_path = os.path.join(here, '..', 'data', 'region_assignment_80_paper.csv')
+    q_path = os.path.join(here, '..', 'outputs', 'data_tiers_final.csv')
+    if not (os.path.exists(rmap_path) and os.path.exists(q_path)):
+        return None
+    rmap = pd.read_csv(rmap_path, encoding='utf-8-sig')
+    q = pd.read_csv(q_path)
+    q_by_stem = {str(r['Record']).strip(): r for _, r in q.iterrows()}
+    rows = []
+    for _, r in rmap.iterrows():
+        for s in [x.strip() for x in str(r['S2_File_IDs']).split(';') if x.strip()]:
+            qr = q_by_stem.get(s)
+            if qr is None:
+                continue
+            rows.append({
+                'Record': s,                        # repository stem
+                'Key': r['Record'],                 # paper name (RECORD_COORDS key)
+                'Tier': r['Tier'],
+                'Region': r['Region'],
+                'Type': qr['Type'],
+                'Composite_Score': qr['Composite_Score'],
+                'SNR_Best': qr['SNR_Best'],
+                'Resolution_Score': qr['Resolution_Score'],
+            })
+    df = pd.DataFrame(rows)
+    assert len(df) == 80, f'canonical quality table = {len(df)} rows (expected 80)'
+    return df
 
 
 def load_orbital():
@@ -133,6 +164,57 @@ def load_orbital():
     if os.path.exists(path):
         return pd.read_csv(path)
     return None
+
+
+def _load_members_800ka():
+    """Load all records covering 0-800 ka, interpolated to the 1-ka grid and
+    standardized over their own dated coverage (NaN outside), grouped by paper
+    region (Southern Ocean records merged into Antarctic).
+
+    Returns ({region: [(interp, coverage_mask, name), ...]}, grid).
+    """
+    from src.io import read_record_df, identify_columns, standardize
+    from src.stacking import classify_record
+
+    grid = AGE_GRID_800
+    members = {}
+    for fname in sorted(os.listdir(DATA_DIR)):
+        if not (fname.endswith('.csv') or fname.endswith('.xlsx')):
+            continue
+        try:
+            df = read_record_df(os.path.join(DATA_DIR, fname))
+        except Exception:
+            continue
+        age_col, val_col = identify_columns(df)
+        if age_col is None or val_col is None:
+            continue
+        age = df[age_col].astype(float).values
+        value = df[val_col].astype(float).values
+        finite = np.isfinite(age) & np.isfinite(value)
+        age, value = age[finite], value[finite]
+        if len(age) < 10:
+            continue
+        order = np.argsort(age)
+        age, value = age[order], value[order]
+        in_range = (age >= 0.0) & (age <= 800.0)
+        if in_range.sum() < 10:
+            continue
+        age, value = age[in_range], value[in_range]
+        _typ, region = classify_record(fname)
+        if region is None:
+            continue
+        if region == 'Southern_Ocean':
+            region = 'Antarctic'   # merged region, as in the Layer-1 figure
+        f = interpolate.interp1d(age, value, kind='linear',
+                                 bounds_error=False, fill_value=np.nan)
+        interp = f(grid)
+        cov = np.isfinite(interp)
+        if cov.sum() < 10:
+            continue
+        interp[cov] = standardize(interp[cov])
+        members.setdefault(region, []).append(
+            (interp, cov, os.path.splitext(fname)[0]))
+    return members, grid
 
 
 # ============================================================================
@@ -155,12 +237,13 @@ def figure1_map(quality_df, out_dir=None):
         print("  cartopy not available – skipping map figure")
         return
 
-    # ---- Big fonts ----
-    apply_style("paper", font_scale=2.2)
-    base_fs = plt.rcParams["font.size"]  # ≈ 24 pt
+    # ---- Print-size fonts (2026-09-21): the map ships at 178 mm width, so
+    # ---- base ≈ 8 pt; all hand-tuned sizes below were scaled accordingly ----
+    apply_style("paper", font_scale=1.0)
+    base_fs = plt.rcParams["font.size"]  # ≈ 8 pt
 
-    # Wide rectangle for global Plate‑Carrée  (360° × 180°  →  2∶1 ratio)
-    fig = plt.figure(figsize=(28, 15))
+    # 178 mm = 7.0 in wide; 2∶1 global Plate‑Carrée keeps the same aspect
+    fig = plt.figure(figsize=(7.0, 3.75))
     proj = ccrs.PlateCarree(central_longitude=0)
     ax = fig.add_subplot(1, 1, 1, projection=proj)
     ax.set_global()
@@ -170,22 +253,22 @@ def figure1_map(quality_df, out_dir=None):
     # ====================================================================
     add_ocean_background(ax, color="#6474B4")       # muted blue-grey ocean
     add_land_background(ax, color="#EDE5D8")         # warm beige land
-    add_coastlines(ax, linewidth=2.2, edgecolor="#000000")   # thick black coastlines
-    ax.add_feature(cfeature.RIVERS, linewidth=0.15, edgecolor="#4A5A8A",
+    add_coastlines(ax, linewidth=0.6, edgecolor="#000000")   # coastlines
+    ax.add_feature(cfeature.RIVERS, linewidth=0.1, edgecolor="#4A5A8A",
                    alpha=0.20, zorder=1)
     ax.add_feature(cfeature.LAKES, facecolor="#6474B4", edgecolor="#4A5A8A",
-                   linewidth=0.15, alpha=0.25, zorder=1)
+                   linewidth=0.1, alpha=0.25, zorder=1)
     # Ocean-floor grid  (subtle depth shading via lighter grid)
     ax.add_feature(cfeature.OCEAN, facecolor="#6474B4", zorder=0)
 
     # ====================================================================
     # 2.  Gridlines — sharp, visible, no labels (labels via axes ticks)
     # ====================================================================
-    gl = ax.gridlines(draw_labels=False, alpha=0.35, linewidth=0.7,
+    gl = ax.gridlines(draw_labels=False, alpha=0.35, linewidth=0.4,
                       xlocs=range(-180, 181, 30), ylocs=range(-90, 91, 30),
                       linestyle="solid", color="#B0B0B0", zorder=3)
     # Finer sub‑grid every 10°
-    gl_sub = ax.gridlines(draw_labels=False, alpha=0.12, linewidth=0.35,
+    gl_sub = ax.gridlines(draw_labels=False, alpha=0.12, linewidth=0.2,
                           xlocs=range(-180, 181, 10), ylocs=range(-90, 91, 10),
                           linestyle="dotted", color="#888888", zorder=3)
 
@@ -199,16 +282,16 @@ def figure1_map(quality_df, out_dir=None):
     ]:
         lons = np.linspace(-180, 180, 361)
         ax.plot(lons, np.full_like(lons, lat_val),
-                color=lat_color, linewidth=1.0, linestyle="dashed",
+                color=lat_color, linewidth=0.5, linestyle="dashed",
                 alpha=0.55, zorder=4, transform=ccrs.PlateCarree())
 
     # ====================================================================
-    # 4.  Thick rectangular frame — all 4 spines visible + ruler ticks
+    # 4.  Rectangular frame — all 4 spines visible + ruler ticks
     # ====================================================================
     AXIS_COLOR = "#222222"
-    AXIS_LW    = 2.2           # thick frame
-    TICK_MAJOR_LEN = 10        # ruler‑like major ticks
-    TICK_MINOR_LEN = 5         # minor ticks
+    AXIS_LW    = 0.7           # frame
+    TICK_MAJOR_LEN = 4         # ruler‑like major ticks
+    TICK_MINOR_LEN = 2         # minor ticks
 
     for spine in ax.spines.values():
         spine.set_visible(True)
@@ -230,36 +313,40 @@ def figure1_map(quality_df, out_dir=None):
 
     # Tick styling — outward ruler ticks, labels close to axes
     ax.tick_params(axis="both", which="major",
-                   direction="out", length=TICK_MAJOR_LEN, width=1.8,
-                   pad=6, labelsize=base_fs + 1, labelcolor=AXIS_COLOR,
+                   direction="out", length=TICK_MAJOR_LEN, width=0.6,
+                   pad=3, labelsize=base_fs + 1, labelcolor=AXIS_COLOR,
                    colors=AXIS_COLOR)
     ax.tick_params(axis="both", which="minor",
-                   direction="out", length=TICK_MINOR_LEN, width=1.0,
-                   pad=6, colors=AXIS_COLOR)
+                   direction="out", length=TICK_MINOR_LEN, width=0.4,
+                   pad=3, colors=AXIS_COLOR)
 
     # Minor ticks every 10°
     ax.set_xticks(range(-180, 181, 10), crs=ccrs.PlateCarree(), minor=True)
     ax.set_yticks(range(-90, 91, 10),  crs=ccrs.PlateCarree(), minor=True)
 
     # Axis labels close to the frame
-    ax.set_xlabel("Longitude", fontsize=base_fs + 3, fontweight="bold",
-                  color=AXIS_COLOR, labelpad=12)
-    ax.set_ylabel("Latitude",  fontsize=base_fs + 3, fontweight="bold",
-                  color=AXIS_COLOR, labelpad=12)
+    ax.set_xlabel("Longitude", fontsize=base_fs + 1, fontweight="bold",
+                  color=AXIS_COLOR, labelpad=4)
+    ax.set_ylabel("Latitude",  fontsize=base_fs + 1, fontweight="bold",
+                  color=AXIS_COLOR, labelpad=4)
 
     # ====================================================================
-    # 5.  Quality lookup
+    # 5.  Quality lookup — keyed by repository stem (canonical 80), with a
+    #     paper-name lookup for the label specs below
     # ====================================================================
-    quality_map = {}
+    quality_map = {}    # stem -> quality (one entry per canonical record)
+    key_quality = {}    # paper name (RECORD_COORDS key) -> same entry
     if quality_df is not None:
         for _, row in quality_df.iterrows():
-            quality_map[row["Record"]] = {
+            entry = {
                 "tier":       row.get("Tier", "Tier 3"),
                 "composite":  float(row.get("Composite_Score", 2.0)),
                 "snr":        float(row.get("SNR_Best", 0)),
                 "type":       row.get("Type", "Other"),
                 "resolution": float(row.get("Resolution_Score", 0)),
             }
+            quality_map[row["Record"]] = entry
+            key_quality[row["Key"]] = entry
 
     # ====================================================================
     # 6.  Region ellipses  — vivid colours, thick solid edges, no‑bbox labels
@@ -271,22 +358,24 @@ def figure1_map(quality_df, out_dir=None):
         (-52, -12,   42,  38,  CARC_COLORS["purple"], "South\nAmerica"),
         (110,  -2,  112,  54,  CARC_COLORS["orange"], "Tropical\nIndo-Pacific"),
     ]
-    region_stroke = [pe.withStroke(linewidth=3.2, foreground="white")]
+    region_stroke = [pe.withStroke(linewidth=0.8, foreground="white")]
+    region_label_texts = []      # obstacles for the defusing pass
     for lon_c, lat_c, w, h, color, label in region_ellipses:
         ell = mpatches.Ellipse(
             (lon_c, lat_c), w, h,
-            linewidth=5.2, linestyle="-",
+            linewidth=1.4, linestyle="-",
             edgecolor=color, facecolor=color, alpha=0.18,
             zorder=3)
         ell.set_transform(ccrs.PlateCarree())
         ax.add_patch(ell)
 
-        ax.text(lon_c, lat_c, label,
-                ha="center", va="center",
-                fontsize=base_fs + 5, fontweight="heavy", color=color,
-                transform=ccrs.PlateCarree(),
-                path_effects=region_stroke,
-                zorder=15)
+        region_label_texts.append(
+            ax.text(lon_c, lat_c, label,
+                    ha="center", va="center",
+                    fontsize=base_fs + 2, fontweight="heavy", color=color,
+                    transform=ccrs.PlateCarree(),
+                    path_effects=region_stroke,
+                    zorder=15))
 
     # ====================================================================
     # 7.  Plot all records  — cubic size scaling for dramatic size contrast
@@ -303,16 +392,24 @@ def figure1_map(quality_df, out_dir=None):
     tier_z       = {"Tier 1": 9, "Tier 2": 8, "Tier 3": 7}
 
     for tier in ["Tier 3", "Tier 2", "Tier 1"]:
-        for rec_name, (lat, lon) in RECORD_COORDS.items():
-            q = quality_map.get(rec_name, {})
+        # iterate the canonical 80 stems (Table S2), not the full
+        # RECORD_COORDS dictionary — the map caption promises the paper's
+        # 80 records, and the 97-row legacy quality file drew far more
+        for _, row in quality_df.iterrows():
+            q = quality_map.get(row["Record"], {})
             if q.get("tier", "Tier 3") != tier:
                 continue
+            coords = RECORD_COORDS.get(row["Key"])
+            if coords is None:
+                continue
+            lat, lon = coords
             composite = max(1.5, q.get("composite", 2.0))
-            # cubic scaling  →  Q=2→~200,  Q=5→~430,  Q=8→~1200  (6× range)
-            size = 180 + composite ** 3 * 2.0
+            # cubic scaling  →  Q=2→~12,  Q=5→~27,  Q=8→~75  (print size:
+            # area divided by 16 to match the 4× narrower canvas)
+            size = (180 + composite ** 3 * 2.0) / 16
             ax.scatter(lon, lat, s=size, c=tier_fill[tier],
                        marker=tier_markers[tier],
-                       edgecolors=tier_edge[tier], linewidth=1.0,
+                       edgecolors=tier_edge[tier], linewidth=0.4,
                        alpha=0.93, zorder=tier_z[tier],
                        transform=ccrs.PlateCarree())
 
@@ -347,14 +444,15 @@ def figure1_map(quality_df, out_dir=None):
         "Malawi_Ca": "Malawi", "U1313_nAlkanes": "U1313",
         "ODP1094_BaFe": "ODP 1094",
     }
-    stroke = [pe.withStroke(linewidth=2.8, foreground="white")]
+    stroke = [pe.withStroke(linewidth=0.7, foreground="white")]
+    record_annotations = []      # (annot, dx, dy) for the defusing pass
 
     for rec_name, dx, dy, ha, va in label_specs:
         coords = get_record_coords(rec_name)
         if coords[0] is None:
             continue
         lat, lon = coords
-        q = quality_map.get(rec_name, {})
+        q = key_quality.get(rec_name, {})
         comp = q.get("composite", None)
         name = short_names.get(rec_name, rec_name[:12])
         if comp is not None:
@@ -362,21 +460,25 @@ def figure1_map(quality_df, out_dir=None):
         else:
             label = name
 
-        ax.annotate(label, xy=(lon, lat),
-                    xytext=(dx, dy), textcoords="offset points",
-                    fontsize=base_fs - 1, fontweight="bold",
-                    color="#111111",
-                    ha=ha, va=va,
-                    arrowprops=dict(arrowstyle="-", color="#1A1A1A", lw=1.6),
-                    transform=ccrs.PlateCarree(), zorder=22,
-                    path_effects=stroke,
-                    clip_on=True, annotation_clip=True)
+        # connector offsets are absolute points: scale by 0.3 for the 7-in
+        # canvas (the defusing pass below resolves any remaining collisions)
+        record_annotations.append((
+            ax.annotate(label, xy=(lon, lat),
+                        xytext=(dx * 0.3, dy * 0.3), textcoords="offset points",
+                        fontsize=base_fs - 1, fontweight="bold",
+                        color="#111111",
+                        ha=ha, va=va,
+                        arrowprops=dict(arrowstyle="-", color="#1A1A1A", lw=0.5),
+                        transform=ccrs.PlateCarree(), zorder=22,
+                        path_effects=stroke,
+                        clip_on=True, annotation_clip=True),
+            dx, dy))
 
     # ====================================================================
     # 9.  Legends — large, crisp
     # ====================================================================
     leg_fs  = base_fs + 2
-    leg_tfs = base_fs + 4
+    leg_tfs = base_fs + 2
 
     n_t1 = sum(1 for q in quality_map.values() if q.get("tier") == "Tier 1")
     n_t2 = sum(1 for q in quality_map.values() if q.get("tier") == "Tier 2")
@@ -385,16 +487,16 @@ def figure1_map(quality_df, out_dir=None):
     # Tier legend (upper‑left)
     tier_handles = [
         plt.Line2D([0], [0], marker="o", color="w",
-                   markerfacecolor=CARC_COLORS["red"], markersize=17,
-                   markeredgewidth=1.0, markeredgecolor="#5C0000",
+                   markerfacecolor=CARC_COLORS["red"], markersize=7,
+                   markeredgewidth=0.5, markeredgecolor="#5C0000",
                    label=f"Tier 1  (n = {n_t1})"),
         plt.Line2D([0], [0], marker="s", color="w",
-                   markerfacecolor=CARC_COLORS["orange"], markersize=16,
-                   markeredgewidth=1.0, markeredgecolor="#5C2800",
+                   markerfacecolor=CARC_COLORS["orange"], markersize=7,
+                   markeredgewidth=0.5, markeredgecolor="#5C2800",
                    label=f"Tier 2  (n = {n_t2})"),
         plt.Line2D([0], [0], marker="^", color="w",
-                   markerfacecolor=TIER3_FILL, markersize=16,
-                   markeredgewidth=1.0, markeredgecolor=TIER3_EDGE,
+                   markerfacecolor=TIER3_FILL, markersize=7,
+                   markeredgewidth=0.5, markeredgecolor=TIER3_EDGE,
                    label=f"Tier 3  (n = {n_t3})"),
     ]
     leg_tier = ax.legend(handles=tier_handles, title="Record Tier",
@@ -404,16 +506,16 @@ def figure1_map(quality_df, out_dir=None):
                          borderpad=0.8, handlelength=1.8, labelspacing=0.5)
     ax.add_artist(leg_tier)
 
-    # Size legend (lower‑left)  — values match  180 + comp³ × 2
+    # Size legend (lower‑left)  — values match  (180 + comp³ × 2) / 16
     size_handles = [
-        plt.scatter([], [], s=200, c="#555555", marker="o",
-                    edgecolors="#333333", linewidth=0.6,
+        plt.scatter([], [], s=12, c="#555555", marker="o",
+                    edgecolors="#333333", linewidth=0.4,
                     label="Q ≈ 2  (low)"),
-        plt.scatter([], [], s=430, c="#555555", marker="o",
-                    edgecolors="#333333", linewidth=0.6,
+        plt.scatter([], [], s=27, c="#555555", marker="o",
+                    edgecolors="#333333", linewidth=0.4,
                     label="Q ≈ 5  (medium)"),
-        plt.scatter([], [], s=1200, c="#555555", marker="o",
-                    edgecolors="#333333", linewidth=0.6,
+        plt.scatter([], [], s=75, c="#555555", marker="o",
+                    edgecolors="#333333", linewidth=0.4,
                     label="Q ≈ 8  (high)"),
     ]
     ax.legend(handles=size_handles,
@@ -425,10 +527,26 @@ def figure1_map(quality_df, out_dir=None):
               handlelength=1.5, labelspacing=0.4)
 
     # ====================================================================
+    # 8b.  Defusing pass — the hand-tuned offsets above are starting points;
+    #      any label that lands on another label / region caption / legend is
+    #      pushed outward along its own connector until it clears (layout QA)
+    # ====================================================================
+    from src.layout_qa import defuse_annotations
+    map_legends = [lg for lg in fig.legends] + \
+                  [lg for lg in (ax.get_legend(),) if lg is not None]
+    # the fixed offsets are starting guesses; colliding labels may also
+    # rotate around their anchor (candidate directions) to find empty space
+    defuse_annotations(fig, record_annotations,
+                       obstacles=region_label_texts + map_legends,
+                       rotations=(0, 20, -20, 40, -40, 60, -60, 80, -80,
+                                  100, -100, 120, -120, 140, -140, 160, -160,
+                                  180))
+
+    # ====================================================================
     # 10.  Title + subtitle
     # ====================================================================
     ax.set_title("Global Distribution of CARC Paleoclimate Proxy Records",
-                 fontsize=base_fs + 14, fontweight="bold", pad=28,
+                 fontsize=base_fs + 2, fontweight="bold", pad=8,
                  color="#111111")
 
     fig.text(0.50, 0.020,
@@ -436,7 +554,7 @@ def figure1_map(quality_df, out_dir=None):
              "Marker size  ~  Composite Quality Score     |     "
              "Plate‑Carrée projection",
              ha="center", va="bottom",
-             fontsize=base_fs - 2, color="#777777", style="italic")
+             fontsize=base_fs - 1, color="#777777", style="italic")
 
     save_figure(fig, "Fig1_Global_Proxy_Map", out_dir)
     plt.close()
@@ -448,21 +566,26 @@ def figure1_map(quality_df, out_dir=None):
 # ============================================================================
 
 def figure2_regional_stacks(out_dir=None):
-    """Regional stack time series (0-800 ka) with MIS windows & orbital forcing."""
-    print("\n>>> Figure 2: Regional stacks")
+    """Layer-1 stacking visualization (0-800 ka): standardized member records,
+    pointwise median stack and P5-P95 member spread per region, MIS shading and
+    orbital forcing. Rebuilt 2026-08-19 from the pipeline member records — the
+    legacy 00_stacked_regions_800ka/*_stacked.csv raw-unit stacks (no generating
+    script) are no longer used by this figure."""
+    print("\n>>> Figure 2: Regional stacks (members + median, 0-800 ka)")
 
-    region_data = load_stacked_regions()
+    members, grid = _load_members_800ka()
     orbital = load_orbital()
 
-    if not region_data:
-        print("  No stacked data – skipping")
+    if not members:
+        print("  No member records – skipping")
         return
 
-    apply_style("paper", font_scale=1.2)
+    apply_style("paper", font_scale=1.0)   # print size: base ≈ 8 pt
 
-    region_order = ["Antarctic", "Southern_Ocean", "North_Atlantic",
-                    "Tropical_Marine", "East_Asian_Monsoon", "South_American_Monsoon"]
-    region_order = [r for r in region_order if r in region_data]
+    region_order = ["North_Atlantic", "Antarctic", "Tropical",
+                    "East_Asian_Monsoon", "South_America", "Other_Lakes"]
+    region_order = [r for r in region_order if r in members]
+    MEMBER_GREY = "#B9B8B0"   # thin member lines, as in the Layer-1 figure
 
     # MIS windows for 0-800 ka
     mis_windows = [
@@ -477,12 +600,13 @@ def figure2_regional_stacks(out_dir=None):
     mis_major_positions = []
     for name, s, e in mis_windows:
         mid = (s + e) / 2
-        if int(name) % 4 == 1 or int(name) <= 2:
+        if int(name) % 4 == 1 or int(name) == 1:
             mis_major_labels.append(f"MIS {name}")
             mis_major_positions.append(mid)
 
     n_regions = len(region_order)
-    fig = plt.figure(figsize=(16, 2.5 * n_regions + 3))
+    # 178 mm = 7.0 in wide; height keeps the original per-panel aspect
+    fig = plt.figure(figsize=(7.0, 7.0 / 16 * (2.5 * n_regions + 3)))
 
     gs = fig.add_gridspec(n_regions + 1, 1, height_ratios=[0.55] + [1] * n_regions,
                           hspace=0.12)
@@ -504,14 +628,14 @@ def figure2_regional_stacks(out_dir=None):
         ecc_smooth = gaussian_filter1d(ecc, sigma=8)
         ax_orb.plot(age_orb, ecc_smooth, color=CARC_COLORS["navy"], linewidth=2.0, alpha=0.9)
 
-        ax_orb.set_ylabel("Eccentricity", color=CARC_COLORS["blue"], fontsize=9, fontweight="bold")
+        ax_orb.set_ylabel("Eccentricity", color=CARC_COLORS["blue"], fontsize=9)
         ax_orb.tick_params(axis="y", labelcolor=CARC_COLORS["blue"], labelsize=8)
 
         # Obliquity on twin axis
         ax_orb2 = ax_orb.twinx()
         obl_smooth = gaussian_filter1d(obl, sigma=8)
         ax_orb2.plot(age_orb, obl_smooth, color=CARC_COLORS["red"], linewidth=1.8, alpha=0.75)
-        ax_orb2.set_ylabel("Obliquity (°)", color=CARC_COLORS["red"], fontsize=9, fontweight="bold")
+        ax_orb2.set_ylabel("Obliquity (°)", color=CARC_COLORS["red"], fontsize=9)
         ax_orb2.tick_params(axis="y", labelcolor=CARC_COLORS["red"], labelsize=8)
 
         # Precession on third axis (light)
@@ -526,7 +650,7 @@ def figure2_regional_stacks(out_dir=None):
         ax_orb.set_xlim(800, 0)
         add_minor_ticks(ax_orb)
         ax_orb.set_title("Orbital Forcing (Laskar et al. 2004) — 800 ka to present",
-                         fontsize=10, fontweight="bold", pad=5)
+                         fontsize=10, pad=5)
 
         # Legend for orbital
         orb_lines = [
@@ -538,66 +662,64 @@ def figure2_regional_stacks(out_dir=None):
         ax_orb.legend(handles=orb_lines, loc="upper right", fontsize=7, ncol=4,
                      framealpha=0.7, edgecolor="#cccccc")
 
-    # --- Regional stack panels ---
+    # --- Regional stack panels (members + median + P5-P95 spread) ---
     for i, region in enumerate(region_order):
         ax = fig.add_subplot(gs[i + 1], sharex=ax_orb if i < n_regions - 1 else None)
-        data = region_data[region]
-        age = data["age"]
-        value_arr = data["value"]
+        recs = members[region]
         color = get_region_color(region)
         label = get_region_label(region)
 
-        # MIS glacial/interglacial shading
+        # MIS glacial/interglacial shading — neutral greys so the six
+        # signal colours stay dominant (odd MIS = cool grey, even = warm grey)
         for name, s, e in mis_windows:
             mis_num = int(name)
-            bg = "#D1E5F0" if mis_num % 2 == 1 else "#FDDBC7"  # warm=cool blue, cold=warm orange
-            ax.axvspan(s, e, facecolor=bg, alpha=0.35, zorder=0, edgecolor="none")
+            bg = "#E9EDF1" if mis_num % 2 == 1 else "#F3EFE8"
+            ax.axvspan(s, e, facecolor=bg, alpha=1.0, zorder=0, edgecolor="none")
 
         # Zero line
         ax.axhline(0, color="#999999", linewidth=0.6, linestyle=":", alpha=0.6, zorder=1)
 
-        # Signal envelope (1σ band)
-        sigma_arr = data["sigma"]
-        ax.fill_between(age, value_arr - sigma_arr * 0.8, value_arr + sigma_arr * 0.8,
-                        color=color, alpha=0.12, linewidth=0, zorder=2)
+        # Member records (thin grey; gaps where a record has no dated coverage)
+        for interp, cov, _name in recs:
+            ax.plot(grid, np.where(cov, interp, np.nan),
+                    color=MEMBER_GREY, lw=0.4, alpha=0.7, zorder=1)
 
-        # Smoothed signal
-        smooth = gaussian_filter1d(value_arr, sigma=3)
-        ax.plot(age, smooth, color=color, linewidth=1.6, alpha=0.95, zorder=3)
+        # Pointwise P5-P95 member spread + median stack (>=2 members required)
+        stacked = np.vstack([interp for interp, _cov, _name in recs])
+        n_avail = np.isfinite(stacked).sum(axis=0)
+        med = np.where(n_avail >= 2, np.nanmedian(stacked, axis=0), np.nan)
+        p5 = np.where(n_avail >= 2, np.nanpercentile(stacked, 5, axis=0), np.nan)
+        p95 = np.where(n_avail >= 2, np.nanpercentile(stacked, 95, axis=0), np.nan)
+        ax.fill_between(grid, p5, p95, color=color, alpha=0.20,
+                        linewidth=0, zorder=2)
+        ax.plot(grid, med, color=color, linewidth=1.4, alpha=1.0, zorder=3)
 
-        # Y-axis label with region colour
-        ax.set_ylabel(label, color=color, fontsize=10, fontweight="bold")
+        # Y-axis label with region colour and member count
+        ax.set_ylabel(f"{label}  (n={len(recs)})", color=color, fontsize=9.5)
         ax.tick_params(axis="y", labelcolor="#333333", labelsize=8)
         ax.set_xlim(800, 0)
-        ax.set_ylim(np.percentile(value_arr, 1.5), np.percentile(value_arr, 98.5))
+        # symmetric scale around 0, bounded so panel scales stay comparable
+        lim = float(np.clip(np.nanpercentile(np.abs(med), 99) * 1.15, 3.6, 4.5))
+        ax.set_ylim(-lim, lim)
         add_minor_ticks(ax)
-        ax.grid(True, alpha=0.12, linestyle="dotted")
-
-        # Annotate mean ± std and n records
-        n_recs = "—"
-        ax.text(0.992, 0.92, f"μ={np.mean(value_arr):.2f}",
-                transform=ax.transAxes, fontsize=7, color="#666666",
-                ha="right", va="top")
-        ax.text(0.992, 0.82, f"1σ={np.std(value_arr):.2f}",
-                transform=ax.transAxes, fontsize=7, color="#999999",
-                ha="right", va="top")
+        ax.grid(True, color="#E1E0D9", linewidth=0.5, alpha=0.6)
 
         # MIS labels on top panel only
         if i == 0:
             for mis_label, mis_x in zip(mis_major_labels, mis_major_positions):
                 ax.text(mis_x, ax.get_ylim()[1] * 1.08, mis_label,
-                       fontsize=6, color="#888888", ha="center", va="bottom",
+                       fontsize=7, color="#888888", ha="center", va="bottom",
                        rotation=0, fontstyle="italic")
 
     # Shared x-axis
-    ax.set_xlabel("Age (ka BP)", fontsize=11, fontweight="bold")
+    ax.set_xlabel("Age (ka BP)", fontsize=11)
     ax.xaxis.set_major_locator(mticker.MultipleLocator(50))
     ax.xaxis.set_minor_locator(mticker.MultipleLocator(10))
 
     # MIS legend
     mis_legend_items = [
-        ("Interglacial (odd MIS) — warm periods", "#D1E5F0"),
-        ("Glacial (even MIS) — cold periods", "#FDDBC7"),
+        ("Interglacial (odd MIS)", "#E9EDF1"),
+        ("Glacial (even MIS)", "#F3EFE8"),
     ]
     legend_ax = fig.add_axes([0.18, 0.008, 0.64, 0.015])
     legend_ax.set_xticks([]); legend_ax.set_yticks([])
@@ -605,12 +727,22 @@ def figure2_regional_stacks(out_dir=None):
         spine.set_visible(False)
     handles = [mpatches.Patch(facecolor=c, edgecolor="#BBBBBB", linewidth=0.5, label=l)
                for l, c in mis_legend_items]
-    legend_ax.legend(handles=handles, loc="center", ncol=2, fontsize=7.5,
+    handles += [Line2D([0], [0], color="#888888", linewidth=2.5, alpha=0.4,
+                       label="member P5–P95 spread")]
+    legend_ax.legend(handles=handles, loc="center", ncol=3, fontsize=7.5,
                      frameon=False)
 
-    # Title
-    fig.suptitle("CARC Regional Proxy Stacks (0–800 ka) with Orbital Forcing & Marine Isotope Stages",
-                 fontsize=13, fontweight="bold", y=0.995)
+    # Title + method note
+    fig.text(0.06, 0.983, "Regional proxy stacks (0–800 ka) with orbital forcing",
+             fontsize=10, fontweight="bold", color="#222222")
+    # two short lines: a single line ran past the canvas right edge at
+    # the 178-mm width (layout QA: text_outside)
+    fig.text(0.06, 0.966, "standardized member records (grey) under the pointwise "
+             "median stack (colour)",
+             fontsize=8.5, color="#666666")
+    fig.text(0.06, 0.950, "with P5–P95 member spread; members shown only over "
+             "their dated coverage",
+             fontsize=8.5, color="#666666")
     add_panel_label(fig.axes[0], "Fig. 2", x=0.008, y=1.25)
 
     save_figure(fig, "Fig2_Regional_Stacks_800ka", out_dir)
@@ -630,36 +762,33 @@ def figure3_record_quality(quality_df, out_dir=None):
         print("  No quality data – skipping")
         return
 
-    apply_style("paper", font_scale=1.15)
+    apply_style("paper", font_scale=1.0)   # print size: base ≈ 8 pt
 
-    fig = plt.figure(figsize=(15, 11))
-    gs = fig.add_gridspec(2, 2, hspace=0.35, wspace=0.30)
+    # 178 mm = 7.0 in wide; same aspect as the original 13 × 9.5 canvas
+    fig = plt.figure(figsize=(7.0, 5.115))
+    gs = fig.add_gridspec(2, 2, hspace=0.38, wspace=0.30)
 
     df = quality_df.copy()
 
-    # --- (a) Tier distribution ---
+    # --- (a) Tier distribution (bars read faster than pie angles) ---
     ax_a = fig.add_subplot(gs[0, 0])
-    tier_counts = df["Tier"].value_counts()
+    TIER_FILL = {"Tier 1": CARC_COLORS["red"],
+                 "Tier 2": CARC_COLORS["orange"],
+                 "Tier 3": "#E8B800"}   # golden — same encoding as the Fig. 1 map
     tier_order = ["Tier 1", "Tier 2", "Tier 3"]
+    tier_counts = df["Tier"].value_counts()
     counts = [tier_counts.get(t, 0) for t in tier_order]
-    colors_pie = [CARC_COLORS["red"], CARC_COLORS["orange"], "#5B9BD5"]
-    explode = (0.05, 0.03, 0.01)
-    wedges, texts, autotexts = ax_a.pie(counts, labels=None, autopct="%1.1f%%",
-                                         colors=colors_pie, startangle=90,
-                                         explode=explode,
-                                         textprops={"fontsize": 11, "fontweight": "bold"},
-                                         pctdistance=0.6)
-    for at in autotexts:
-        at.set_color("white")
-        at.set_fontweight("bold")
-    # Centre circle for donut effect
-    centre_circle = plt.Circle((0, 0), 0.35, fc="white", linewidth=0)
-    ax_a.add_artist(centre_circle)
-    ax_a.text(0, 0, f"N={len(df)}", ha="center", va="center",
-             fontsize=13, fontweight="bold", color="#333333")
-    ax_a.legend(wedges, [f"{t} (n={c})" for t, c in zip(tier_order, counts)],
-                loc="lower center", ncol=3, fontsize=9, framealpha=0.8)
-    ax_a.set_title("Record Tier Distribution", fontweight="bold", fontsize=12)
+    ax_a.bar(range(3), counts, width=0.62,
+             color=[TIER_FILL[t] for t in tier_order], edgecolor="none")
+    for x, c in zip(range(3), counts):
+        ax_a.text(x, c + max(counts) * 0.02, str(c), ha="center", va="bottom",
+                  fontsize=9, color="#444444")
+    ax_a.set_xticks(range(3))
+    ax_a.set_xticklabels(tier_order, fontsize=10)
+    ax_a.set_ylabel("Number of records", fontsize=10)
+    ax_a.set_ylim(0, max(counts) * 1.12)
+    ax_a.grid(axis="y", alpha=0.25)
+    ax_a.set_title("Record tier distribution", fontsize=11, loc="left")
     add_panel_label(ax_a, "(a)")
 
     # --- (b) Composite score by type ---
@@ -675,14 +804,14 @@ def figure3_record_quality(quality_df, out_dir=None):
     for typ in types:
         scores = df[df["Type"] == typ]["Composite_Score"].dropna()
         if len(scores) > 0:
-            ax_b.hist(scores, bins=14, alpha=0.55, label=f"{typ} (n={len(scores)})",
-                      color=type_colors.get(typ, CARC_COLORS["grey"]),
-                      edgecolor="#333333", linewidth=0.4)
+            ax_b.hist(scores, bins=14, histtype="step", linewidth=1.4,
+                      label=f"{typ} (n={len(scores)})",
+                      color=type_colors.get(typ, CARC_COLORS["grey"]))
     ax_b.set_xlabel("Composite Quality Score", fontsize=11)
-    ax_b.set_ylabel("Number of Records", fontsize=11)
-    ax_b.legend(fontsize=8, loc="upper left", framealpha=0.8)
-    ax_b.set_title("Quality Score Distribution by Archive Type", fontweight="bold", fontsize=12)
-    ax_b.grid(axis="y", alpha=0.2)
+    ax_b.set_ylabel("Number of records", fontsize=11)
+    ax_b.legend(fontsize=8, loc="upper left", frameon=False)
+    ax_b.set_title("Quality score by archive type", fontsize=11, loc="left")
+    ax_b.grid(axis="y", alpha=0.25)
     add_minor_ticks(ax_b)
     add_panel_label(ax_b, "(b)")
 
@@ -694,61 +823,53 @@ def figure3_record_quality(quality_df, out_dir=None):
         if mask.sum() > 0:
             ax_c.scatter(df.loc[mask, "Resolution_Score"],
                         df.loc[mask, "SNR_Best"],
-                        c=colors_pie[["Tier 1", "Tier 2", "Tier 3"].index(tier)],
-                        marker=tier_markers[tier], s=70, alpha=0.7,
-                        edgecolors="#333333", linewidth=0.4,
+                        c=TIER_FILL[tier],
+                        marker=tier_markers[tier], s=45, alpha=0.75,
+                        edgecolors="white", linewidth=0.3,
                         label=tier, zorder=5)
-    # Add correlation annotation
+    # Correlation annotation (plain text, no box)
     valid = df[["Resolution_Score", "SNR_Best"]].dropna()
     if len(valid) > 5:
         r, p = stats.pearsonr(valid["Resolution_Score"], valid["SNR_Best"])
-        ax_c.text(0.97, 0.06, f"r = {r:.2f}\np = {p:.3f}",
-                 transform=ax_c.transAxes, fontsize=8,
-                 ha="right", va="bottom",
-                 bbox=dict(boxstyle="round", facecolor="white", alpha=0.8))
+        ax_c.text(0.97, 0.06, f"r = {r:.2f}   p = {p:.3f}",
+                 transform=ax_c.transAxes, fontsize=8.5,
+                 ha="right", va="bottom", color="#444444")
     ax_c.set_xlabel("Resolution Score", fontsize=11)
     ax_c.set_ylabel("Best SNR", fontsize=11)
-    ax_c.legend(fontsize=9, loc="upper right", framealpha=0.8)
-    ax_c.set_title("Signal-to-Noise vs Resolution", fontweight="bold", fontsize=12)
-    ax_c.grid(True, alpha=0.2)
+    ax_c.legend(fontsize=9, loc="upper right", frameon=False)
+    ax_c.set_title("Signal-to-noise vs resolution", fontsize=11, loc="left")
+    ax_c.grid(True, alpha=0.25)
     add_minor_ticks(ax_c)
     add_panel_label(ax_c, "(c)")
 
-    # --- (d) Regional record counts ---
+    # --- (d) Regional record counts — the paper's region assignment
+    #     (Table S4: 13/18/34/6/3/6), not a nearest-centroid guess over
+    #     the full coordinate dictionary (layout/data QA: the old guess
+    #     counted 98 coords and split Antarctic/Southern Ocean)
     ax_d = fig.add_subplot(gs[1, 1])
-    region_counts = {}
-    for rec_name in RECORD_COORDS:
-        rec_lat, rec_lon = RECORD_COORDS[rec_name]
-        best_region = "Other"
-        best_dist = float("inf")
-        for region, (rlat, rlon) in REGION_CENTROIDS.items():
-            d = np.sqrt((rec_lat - rlat) ** 2 + (rec_lon - rlon) ** 2)
-            if d < best_dist:
-                best_dist = d
-                best_region = region
-        best_region = best_region.replace("Tropical_Marine", "Tropical")
-        best_region = best_region.replace("South_American_Monsoon", "South_America")
-        best_region = best_region.replace("Lake", "Other_Lakes")
-        region_counts[best_region] = region_counts.get(best_region, 0) + 1
-
-    # Merge similar regions for display
-    display_regions = {
-        "North_Atlantic": "North Atlantic",
-        "Antarctic": "Antarctic",
-        "Southern_Ocean": "Southern Ocean",
-        "Tropical": "Tropical Indo-Pacific",
-        "East_Asian_Monsoon": "East Asian Monsoon",
-        "South_America": "South America",
-        "Other_Lakes": "High-Lat. Lakes",
-    }
+    region_counts = df["Region"].value_counts().to_dict()   # per-stem counts
+    display_regions = [
+        ("North_Atlantic",           "North Atlantic",
+         get_region_color("North_Atlantic")),
+        ("Antarctic_SouthernOcean",  "Antarctic/Southern Ocean",
+         get_region_color("Antarctic")),
+        ("Tropical",                 "Tropical",
+         get_region_color("Tropical")),
+        ("East_Asian_Monsoon",       "East Asian Monsoon",
+         get_region_color("East_Asian_Monsoon")),
+        ("South_America",            "South American Monsoon",
+         get_region_color("South_American_Monsoon")),
+        ("HighLat_Lakes",            "High-latitude Lakes",
+         get_region_color("Other_Lakes")),
+    ]
     r_names_plot = []
     r_counts_plot = []
     r_colors_plot = []
-    for key, label in display_regions.items():
+    for key, label, color in display_regions:
         if key in region_counts:
             r_names_plot.append(label)
             r_counts_plot.append(region_counts[key])
-            r_colors_plot.append(get_region_color(key))
+            r_colors_plot.append(color)
 
     # Sort by count
     order = np.argsort(r_counts_plot)
@@ -757,16 +878,13 @@ def figure3_record_quality(quality_df, out_dir=None):
     r_colors_plot = [r_colors_plot[i] for i in order]
 
     bars = ax_d.barh(range(len(r_names_plot)), r_counts_plot, color=r_colors_plot,
-                     edgecolor="#333333", linewidth=0.5, alpha=0.85, height=0.7)
+                     edgecolor="none", alpha=1.0, height=0.62)
     ax_d.set_yticks(range(len(r_names_plot)))
-    ax_d.set_yticklabels(r_names_plot, fontsize=10)
-    ax_d.set_xlabel("Number of Proxy Records", fontsize=11)
+    ax_d.set_yticklabels(r_names_plot, fontsize=9.5)
+    ax_d.set_xlabel("Number of proxy records", fontsize=11)
     ax_d.invert_yaxis()
-    ax_d.set_title("Records per Geographic Region", fontweight="bold", fontsize=12)
-    ax_d.grid(axis="x", alpha=0.2)
-    for bar, count in zip(bars, r_counts_plot):
-        ax_d.text(bar.get_width() + 0.3, bar.get_y() + bar.get_height() / 2,
-                  str(count), va="center", fontsize=10, fontweight="bold", color="#333333")
+    ax_d.set_title("Records per region", fontsize=11, loc="left")
+    ax_d.grid(axis="x", alpha=0.25)
     add_panel_label(ax_d, "(d)")
 
     save_figure(fig, "Fig3_Record_Quality_Summary", out_dir)
@@ -775,18 +893,78 @@ def figure3_record_quality(quality_df, out_dir=None):
 
 
 # ============================================================================
-# Figure 4: DDR causal network
+# Figure: causal network from real detection rates (supplementary)
 # ============================================================================
 
 def figure4_ddr_network(out_dir=None):
-    """Geographically-informed DDR causal network diagram."""
-    print("\n>>> Figure 4: DDR causal network")
+    """Geographic causal network for the H4 window plus the full
+    6-window x 15-pair overview, drawn from real pipeline results
+    (outputs/regional_robustness_windows.csv).
+
+    Honest sub-threshold framing: edge/cell colour = detection rate on one
+    sequential ramp running up to 1.0, with the 95% claim threshold marked --
+    the strongest link (H4, North Atlantic -> Tropical, 78%) stays visibly
+    below it, so the figure supports *no* directional claim (Theorem 4).
+    """
+    print("\n>>> Figure: causal network (real detection rates)")
 
     apply_style("paper", font_scale=1.15)
+    rates = _load_pair_window_rates()
 
-    # Load DDR edges from cached results; falls back to example values with
-    # a clear UserWarning when outputs/ddr_regional.csv is missing.
-    edges = _load_ddr_edges()
+    REGION_CODE = {'North_Atlantic': 'NA', 'Antarctic': 'SO',
+                   'Tropical': 'TR', 'East_Asian_Monsoon': 'EA',
+                   'South_America': 'SA', 'Other_Lakes': 'HL'}
+    PAIRS = [('North_Atlantic', 'Antarctic'),
+             ('North_Atlantic', 'Tropical'),
+             ('North_Atlantic', 'East_Asian_Monsoon'),
+             ('North_Atlantic', 'South_America'),
+             ('North_Atlantic', 'Other_Lakes'),
+             ('Antarctic', 'Tropical'),
+             ('Antarctic', 'East_Asian_Monsoon'),
+             ('Antarctic', 'South_America'),
+             ('Antarctic', 'Other_Lakes'),
+             ('Tropical', 'East_Asian_Monsoon'),
+             ('Tropical', 'South_America'),
+             ('Tropical', 'Other_Lakes'),
+             ('East_Asian_Monsoon', 'South_America'),
+             ('East_Asian_Monsoon', 'Other_Lakes'),
+             ('South_America', 'Other_Lakes')]
+    WINDOWS = ['Bølling-Allerød', 'H1 event', 'Last Glacial Maximum',
+               'H4 event', 'GI-12 (interstadial)', 'GS-12 (stadial)']
+    WIN_ABBR = {'Bølling-Allerød': 'B-A', 'H1 event': 'H1',
+                'Last Glacial Maximum': 'LGM', 'H4 event': 'H4',
+                'GI-12 (interstadial)': 'GI-12', 'GS-12 (stadial)': 'GS-12'}
+    H4 = 'H4 event'
+    REGIONS = ['North_Atlantic', 'Antarctic', 'Tropical',
+               'East_Asian_Monsoon', 'South_America', 'Other_Lakes']
+
+    def rate_of(s, d):
+        """Detection rate of s->d in the H4 window, regardless of row order."""
+        if (H4, s, d) in rates:
+            return rates[(H4, s, d)][0]
+        return rates[(H4, d, s)][1]
+
+    # single sequential ramp (light -> navy) spanning the full [0, 1] scale,
+    # so the distance of every edge to the 95% claim threshold reads directly
+    from matplotlib.colors import LinearSegmentedColormap
+    RAMP = LinearSegmentedColormap.from_list(
+        'carc_rate', ['#EDF2F8', CARC_COLORS['navy']])
+
+    def rate_color(v):
+        return RAMP(np.clip(v, 0.0, 1.0))
+
+    # H4 window: keep the top-6 directed rates (map stays readable)
+    directed = []
+    for (a, b) in PAIRS:
+        f, r = rates[(H4, a, b)]
+        directed.append((f, a, b))
+        directed.append((r, b, a))
+    top6 = sorted(directed, key=lambda t: -t[0])[:6]
+    shown = {(s, d) for _, s, d in top6}
+    pair_max = {}
+    for _, s, d in top6:
+        key = tuple(sorted((s, d)))
+        pair_max[key] = max(pair_max.get(key, 0.0), rate_of(s, d))
 
     try:
         import cartopy.crs as ccrs
@@ -796,163 +974,197 @@ def figure4_ddr_network(out_dir=None):
 
     fig = plt.figure(figsize=(17, 8))
 
-    # --- (a) Geographic network ---
+    # ------------------------------------------------------------ (a) map --
     if HAS_CARTOPY:
-        ax_map = fig.add_subplot(1, 2, 1, projection=ccrs.PlateCarree(central_longitude=0))
+        ax_map = fig.add_subplot(1, 2, 1,
+                                 projection=ccrs.PlateCarree(central_longitude=0))
         ax_map.set_global()
-        ax_map.set_facecolor("#D6EAF5")
-        add_ocean_background(ax_map, color="#5A90B0")
-        add_land_background(ax_map, color="#F0EAD8")
-        add_coastlines(ax_map, linewidth=1.4, edgecolor="#222222")
+        ax_map.set_facecolor("#CBD6E8")
+        add_ocean_background(ax_map, color="#6474B4")
+        add_land_background(ax_map, color="#EDE5D8")
+        add_coastlines(ax_map, linewidth=1.0, edgecolor="#222222")
         add_map_gridlines(ax_map, draw_labels=True, alpha=0.15, linewidth=0.3)
     else:
         ax_map = fig.add_subplot(1, 2, 1)
 
-    # Collect used regions
-    used_regions = {}
-    for src, dst, rate, _, ddr in edges:
-        used_regions[src] = max(used_regions.get(src, 0), rate)
-        used_regions[dst] = max(used_regions.get(dst, 0), rate)
+    involved = {r: 0.0 for r in REGIONS}
+    for s, d in shown:
+        involved[s] = max(involved[s], rate_of(s, d))
 
-    # Plot region centroids
-    for region, max_rate in used_regions.items():
+    node_texts = []
+    for region in REGIONS:
         lat, lon = get_region_centroid(region)
         color = get_region_color(region)
         label = get_region_label(region)
-        size = 120 + max_rate * 200  # size proportional to max involvement
+        size = 140 + involved[region] * 360
         if HAS_CARTOPY:
             ax_map.scatter(lon, lat, s=size, c=color, edgecolors="white",
-                          linewidth=2.0, zorder=10, transform=ccrs.PlateCarree())
-            ax_map.text(lon, lat + 4, label, ha="center", va="bottom",
-                       fontsize=9, fontweight="bold", color=color,
-                       transform=ccrs.PlateCarree(),
-                       path_effects=[pe.withStroke(linewidth=2.0, foreground="white")],
-                       zorder=11)
+                           linewidth=2.0, zorder=10,
+                           transform=ccrs.PlateCarree())
+            node_texts.append(
+                ax_map.text(lon, lat + 4, label, ha="center", va="bottom",
+                            fontsize=8.5, fontweight="bold", color=color,
+                            transform=ccrs.PlateCarree(),
+                            path_effects=[pe.withStroke(linewidth=2.0,
+                                                        foreground="white")],
+                            zorder=11))
         else:
             ax_map.scatter(lon, lat, s=size, c=color, edgecolors="white",
-                          linewidth=2.0, zorder=10)
-            ax_map.text(lon, lat + 4, label, ha="center", va="bottom",
-                       fontsize=9, fontweight="bold", color=color)
+                           linewidth=2.0, zorder=10)
+            node_texts.append(
+                ax_map.text(lon, lat + 4, label, ha="center", va="bottom",
+                            fontsize=8.5, fontweight="bold", color=color))
 
-    # Draw edges
-    for src, dst, rate, _, ddr in edges:
-        lat1, lon1 = get_region_centroid(src)
-        lat2, lon2 = get_region_centroid(dst)
-        lw = max(0.6, min(5, ddr * 0.7))
-        alpha_val = min(1.0, rate * 1.1 + 0.2)
-        mid_lon, mid_lat = (lon1 + lon2) / 2, (lat1 + lat2) / 2
-
+    # edges: one line per unordered pair, arrowheads per shown direction,
+    # detection-rate labels defused by src.layout_qa against nodes/arrows
+    hero = ('North_Atlantic', 'Tropical')
+    arrow_anns, label_items = [], []
+    for (a, b), vmax in pair_max.items():
+        lat1, lon1 = get_region_centroid(a)
+        lat2, lon2 = get_region_centroid(b)
+        lw = 1.0 + 3.4 * vmax
+        if (a, b) in shown and (b, a) in shown:
+            lw *= 1.25
+        if (a, b) == hero or (b, a) == hero:
+            lw += 1.6          # hero highlight
         if HAS_CARTOPY:
-            ax_map.plot([lon1, lon2], [lat1, lat2],
-                       color="#444444", linewidth=lw, alpha=alpha_val,
-                       transform=ccrs.PlateCarree(), zorder=5, solid_capstyle="round")
-            # Arrow at midpoint
-            ax_map.annotate("", xy=(mid_lon + (lon2 - lon1) * 0.08, mid_lat + (lat2 - lat1) * 0.08),
-                          xytext=(mid_lon, mid_lat),
-                          arrowprops=dict(arrowstyle="->", color="#444444",
-                                        lw=lw * 0.6, alpha=alpha_val),
-                          transform=ccrs.PlateCarree(), zorder=6,
-                          fontsize=1)
-            # DDR label — no box, white outline
-            ax_map.text(mid_lon + 1.5, mid_lat + 1.5, f"{ddr:.1f}",
-                       fontsize=6.5, color=CARC_COLORS["purple"], fontweight="bold",
-                       ha="center", va="center",
-                       transform=ccrs.PlateCarree(),
-                       path_effects=[pe.withStroke(linewidth=1.8, foreground="white")],
-                       zorder=12)
+            if (a, b) == hero or (b, a) == hero:
+                ax_map.plot([lon1, lon2], [lat1, lat2], color="white",
+                            linewidth=lw + 2.5, zorder=4.6,
+                            solid_capstyle="round", transform=ccrs.PlateCarree())
+            ax_map.plot([lon1, lon2], [lat1, lat2], color=rate_color(vmax),
+                        linewidth=lw, zorder=5, solid_capstyle="round",
+                        alpha=0.95, transform=ccrs.PlateCarree())
+            e_len = np.hypot(lon2 - lon1, lat2 - lat1) or 1.0
+            perp = (-(lat2 - lat1) / e_len, (lon2 - lon1) / e_len)
+            for s, d in ((a, b), (b, a)):
+                if (s, d) not in shown:
+                    continue
+                v = rate_of(s, d)
+                lats, lons = get_region_centroid(s)
+                latd, lond = get_region_centroid(d)
+                head_frac = 0.80
+                hx = lons + (lond - lons) * head_frac
+                hy = lats + (latd - lats) * head_frac
+                tx = lons + (lond - lons) * (head_frac - 0.09)
+                ty = lats + (latd - lats) * (head_frac - 0.09)
+                ann = ax_map.annotate(
+                    "", xy=(hx, hy), xytext=(tx, ty),
+                    arrowprops=dict(arrowstyle="-|>", color=rate_color(v),
+                                    lw=max(1.0, lw * 0.55)),
+                    transform=ccrs.PlateCarree(), zorder=6, fontsize=1)
+                arrow_anns.append(ann)
+                mid = ((lons + lond) / 2, (lats + latd) / 2)
+                unit = ((lond - lons) / e_len, (latd - lats) / e_len)
+                star = "★" if v >= 0.75 else ""
+                label_items.append((
+                    ax_map.text(mid[0] + perp[0] * 4.5,
+                                mid[1] + perp[1] * 4.5,
+                                f"{v:.2f}{star}",
+                                fontsize=8.5 if v >= 0.75 else 7.5,
+                                color="#1a1a18", fontweight="bold",
+                                ha="center", va="center",
+                                transform=ccrs.PlateCarree(),
+                                path_effects=[pe.withStroke(linewidth=2.0,
+                                                            foreground="white")],
+                                zorder=12),
+                    mid, unit, e_len, perp))
         else:
             ax_map.annotate("", xy=(lon2, lat2), xytext=(lon1, lat1),
-                          arrowprops=dict(arrowstyle="->", color="#444444",
-                                        lw=lw, alpha=alpha_val))
-            ax_map.text(mid_lon + 2, mid_lat + 2, f"DDR={ddr:.1f}",
-                       fontsize=7, color=CARC_COLORS["purple"], fontweight="bold")
+                            arrowprops=dict(arrowstyle="->",
+                                            color=rate_color(vmax), lw=lw))
+
+    if HAS_CARTOPY and label_items:
+        from src.layout_qa import defuse_edge_labels
+        defuse_edge_labels(fig, label_items,
+                           obstacles=node_texts + arrow_anns)
 
     if HAS_CARTOPY:
-        ax_map.set_title("Geographic Causal Network", fontweight="bold", fontsize=13, pad=10)
+        ax_map.set_title("Geographic causal network — H4 event (36–40 ka BP)",
+                         fontweight="bold", fontsize=11.5, pad=8)
     else:
         ax_map.set_xlabel("Longitude"); ax_map.set_ylabel("Latitude")
-        ax_map.set_title("Geographic Causal Network", fontweight="bold", fontsize=13)
-        ax_map.grid(True, alpha=0.2)
+        ax_map.set_title("Geographic causal network — H4 event (36–40 ka BP)",
+                         fontweight="bold", fontsize=11.5)
     add_panel_label(ax_map, "(a)")
 
-    # --- (b) DDR bar chart ---
-    ax_bar = fig.add_subplot(1, 2, 2)
-    edge_labels_short = [f"{get_region_label(s)[:15]}\n→ {get_region_label(d)[:15]}"
-                         for s, d, _, _, _ in edges]
-    forward_rates = [r for _, _, r, _, _ in edges]
-    reverse_rates = [r for _, _, _, r, _ in edges]
-    ddr_values = [ddr for _, _, _, _, ddr in edges]
+    ax_map.text(0.015, 0.025,
+                "H4 event (36–40 ka BP)\n"
+                "edges = top-6 directed detection rates\n"
+                "(Antarctic links ≤ 0.31 in this window)\n"
+                "strongest link North Atlantic → Tropical:\n"
+                "78% of realizations (reverse 66%)\n"
+                "→ below the 95% reproducibility threshold:\n"
+                "no directional claim (Theorem 4)",
+                transform=ax_map.transAxes, fontsize=7.5, va="bottom",
+                ha="left", color="#222222",
+                bbox=dict(boxstyle="round,pad=0.45", facecolor="white",
+                          edgecolor="#999999", alpha=0.9), zorder=20)
 
-    # Sort by DDR
-    order = np.argsort(ddr_values)[::-1]
-    edge_labels_short = [edge_labels_short[i] for i in order]
-    forward_rates = [forward_rates[i] for i in order]
-    reverse_rates = [reverse_rates[i] for i in order]
-    ddr_values = [ddr_values[i] for i in order]
+    # ------------------------------------------------ (b) overview heatmap --
+    ax_hm = fig.add_subplot(1, 2, 2)
+    V = np.zeros((len(PAIRS), len(WINDOWS)))
+    for i, (a, b) in enumerate(PAIRS):
+        for j, w in enumerate(WINDOWS):
+            f, r = rates[(w, a, b)]
+            V[i, j] = max(f, r)
+    order = np.argsort(-V.max(axis=1))
+    V = V[order]
+    pair_rows = [PAIRS[i] for i in order]
 
-    x_pos = np.arange(len(edges))
-    width = 0.32
+    im = ax_hm.imshow(V, cmap=RAMP, vmin=0.0, vmax=1.0, aspect="auto",
+                      origin="upper")
+    for i in range(V.shape[0]):
+        for j in range(V.shape[1]):
+            v = V[i, j]
+            ax_hm.text(j, i, f"{v:.2f}", ha="center", va="center",
+                       fontsize=7.0, fontweight="bold",
+                       color="white" if v > 0.45 else "#1a1a18")
+    # hero cell: strongest pair-window overall (H4, NA→TR)
+    i_hero = pair_rows.index(('North_Atlantic', 'Tropical'))
+    j_hero = WINDOWS.index(H4)
+    ax_hm.add_patch(mpatches.Rectangle((j_hero - 0.5, i_hero - 0.5), 1, 1,
+                                       fill=False, edgecolor="white",
+                                       linewidth=2.2, zorder=5))
+    ax_hm.set_xticks(range(len(WINDOWS)))
+    ax_hm.set_xticklabels([WIN_ABBR[w] for w in WINDOWS], fontsize=8)
+    ax_hm.set_yticks(range(len(pair_rows)))
+    ax_hm.set_yticklabels([f"{REGION_CODE[a]}–{REGION_CODE[b]}"
+                           for a, b in pair_rows], fontsize=7.5)
+    ax_hm.set_xticks(np.arange(-0.5, len(WINDOWS)), minor=True)
+    ax_hm.set_yticks(np.arange(-0.5, len(pair_rows)), minor=True)
+    ax_hm.grid(which="minor", color="white", linewidth=1.0)
+    ax_hm.grid(False, which="major")
+    ax_hm.tick_params(which="minor", length=0)
+    cb = fig.colorbar(im, ax=ax_hm, fraction=0.046, pad=0.03)
+    cb.set_label("max(A→B, B→A) detection rate\n(share of 200 realizations)",
+                 fontsize=8)
+    cb.ax.axhline(0.95, color=CARC_COLORS["red"], linewidth=1.6)
+    cb.ax.text(0.5, 0.952, "95% claim\nthreshold", fontsize=7,
+               color=CARC_COLORS["red"], ha="center", va="bottom")
+    ax_hm.set_title("All 90 pair-windows: strongest directed rate",
+                    fontweight="bold", fontsize=11.5)
+    add_panel_label(ax_hm, "(b)")
 
-    bars_fwd = ax_bar.bar(x_pos - width / 2, forward_rates, width,
-                          color=CARC_COLORS["red"], alpha=0.8,
-                          edgecolor="#333333", linewidth=0.5,
-                          label="Forward detection rate")
-    bars_rev = ax_bar.bar(x_pos + width / 2, reverse_rates, width,
-                          color=CARC_COLORS["blue"], alpha=0.8,
-                          edgecolor="#333333", linewidth=0.5,
-                          label="Reverse detection rate")
+    # honest headline, computed from the data (never hard-coded)
+    vmax_all = float(V.max())
+    i_imax, j_imax = np.unravel_index(int(np.argmax(V)), V.shape)
+    a_max, b_max = pair_rows[i_imax]
+    w_max = WIN_ABBR[WINDOWS[j_imax]]
+    ax_hm.text(0.02, -0.115,
+               f"no pair-window reaches the 95% reproducibility threshold — "
+               f"max {vmax_all:.2f} ({w_max}, {REGION_CODE[a_max]}→"
+               f"{REGION_CODE[b_max]}) · median {float(np.median(V)):.2f} "
+               f"· {int((V >= 0.95).sum())}/90 ≥ 0.95",
+               transform=ax_hm.transAxes, fontsize=8.5, ha="left", va="top",
+               color="#1a1a18", fontweight="bold")
 
-    # DDR value and significance star above bars
-    for i, (ddr, fwd, rev) in enumerate(zip(ddr_values, forward_rates, reverse_rates)):
-        y_pos = max(fwd, rev) + 0.04
-        marker = "★" if ddr >= 3.0 else "◆" if ddr >= 2.0 else "●"
-        ax_bar.text(i, y_pos, f"{marker} DDR={ddr:.1f}",
-                   ha="center", fontsize=8, fontweight="bold",
-                   color=CARC_COLORS["purple"])
+    fig.suptitle("CARC regional causal network — real detection rates",
+                 fontsize=13, fontweight="bold", y=0.99)
 
-    ax_bar.set_xticks(x_pos)
-    ax_bar.set_xticklabels(edge_labels_short, fontsize=7.5, rotation=20, ha="right")
-    ax_bar.set_ylabel("Detection Rate", fontsize=11)
-    ax_bar.set_ylim(0, 1.08)
-    ax_bar.legend(fontsize=9, loc="upper right", framealpha=0.8)
-    ax_bar.axhline(0.80, color="grey", linestyle="--", alpha=0.5, linewidth=1.2)
-    ax_bar.text(len(edges) - 0.5, 0.815, "95% stability threshold",
-               fontsize=7.5, color="grey", ha="right", va="bottom")
-    ax_bar.axhline(0.50, color="grey", linestyle=":", alpha=0.35, linewidth=1.0)
-    ax_bar.text(len(edges) - 0.5, 0.515, "50% chance level",
-               fontsize=7, color="lightgrey", ha="right", va="bottom")
-    ax_bar.set_title("Directional Dominance Ratio (DDR)", fontweight="bold", fontsize=13)
-    ax_bar.grid(axis="y", alpha=0.15)
-    add_panel_label(ax_bar, "(b)")
-
-    # DDR legend
-    legend_note = ("★ DDR ≥ 3.0 (strong directional)\n"
-                   "◆ DDR ≥ 2.0 (moderate)\n"
-                   "● DDR < 2.0 (weak)")
-    ax_bar.text(0.02, 0.96, legend_note, transform=ax_bar.transAxes,
-               fontsize=7.5, va="top", ha="left", color="#666666",
-               bbox=dict(boxstyle="round,pad=0.3", facecolor="white",
-                         edgecolor="#cccccc", alpha=0.85))
-
-    # Stats
-    add_stats_box(ax_bar, {
-        "Edges": len(edges),
-        "Mean DDR": np.mean(ddr_values),
-        "Max DDR": np.max(ddr_values),
-        "Regions": len(used_regions),
-    }, loc="lower left")
-
-    fig.suptitle("CARC Directional Dominance Analysis — Regional Causal Network",
-                 fontsize=14, fontweight="bold", y=0.99)
-
-    save_figure(fig, "Fig4_DDR_Causal_Network", out_dir)
+    save_figure(fig, "FigS_Causal_Network", out_dir)
     plt.close()
-    print("  → Fig4_DDR_Causal_Network saved")
-
-
-# ============================================================================
-# Figure 5: Multi-panel method validation
-# ============================================================================
+    print("  → FigS_Causal_Network saved")
 
 def figure5_validation(out_dir=None):
     """Enhanced multi-panel validation figure."""

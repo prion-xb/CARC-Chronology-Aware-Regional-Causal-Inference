@@ -16,5 +16,5 @@ dependencies:
   - pytest>=7.0
   - pip
   - pip:
-    - skccm  # optional: CCM method comparison
-    # - tigramite  # optional: PCMCI method comparison (uncomment to install)
+    - tigramite>=5.0  # Table 2 (PCMCI tester, scripts/39_table2_zzf.py)
+    # - pyEDM>=2.0  # optional: CCM cross-validation reference

@@ -37,16 +37,27 @@ def apply_style(context: str = "paper", font_scale: float = 1.0):
     font_scale : float
         Multiply all font sizes by this factor.
     """
-    base_font_size = {"paper": 11, "talk": 14, "poster": 18}.get(context, 11)
+    # Print-size typography (2026-09-21): paper figures are rendered at the
+    # final column width (178 mm = 7.0 in), so the base font is 8 pt — the
+    # Elsevier minimum is 7 pt. Larger canvases are a layout error, not a
+    # license for larger fonts (see CARC_final2 figure-audit notes).
+    base_font_size = {"paper": 8, "talk": 14, "poster": 18}.get(context, 8)
     base_font_size = int(base_font_size * font_scale)
 
     plt.rcParams.update({
         # --- Typography ---
         "font.family": "sans-serif",
         "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans", "sans-serif"],
+        # mathtext in Arial too: DejaVu math glyphs trigger "missing glyph"
+        # warnings in Adobe Illustrator (no DejaVu on Windows)
+        "mathtext.fontset": "custom",
+        "mathtext.rm": "Arial",
+        "mathtext.it": "Arial:italic",
+        "mathtext.bf": "Arial:bold",
+        "mathtext.cal": "Arial:italic",
         "font.size": base_font_size,
-        "axes.titlesize": base_font_size + 3,
-        "axes.labelsize": base_font_size + 1,
+        "axes.titlesize": base_font_size + 1,
+        "axes.labelsize": base_font_size,
         "xtick.labelsize": base_font_size - 1,
         "ytick.labelsize": base_font_size - 1,
         "legend.fontsize": base_font_size - 1,
@@ -55,37 +66,47 @@ def apply_style(context: str = "paper", font_scale: float = 1.0):
         # --- Figure ---
         "figure.dpi": 150,
         "savefig.dpi": 300,
-        "savefig.bbox": "tight",
+        # NOTE: fixed canvas (no tight bbox). Tight cropping makes margins
+        # figure-dependent and shifts panels relative to each other; layout
+        # QA (scripts/qa_figures.py) relies on the fixed canvas. Panels that
+        # stick out are reported as text_outside instead of silently
+        # re-cropping the figure.
+        "savefig.bbox": None,
         "savefig.pad_inches": 0.05,
+        # TrueType subset embedding: Elsevier (and most publishers) reject
+        # matplotlib's default Type3 outlines — the delivered Fig1 PDF must
+        # carry /FontFile entries for every glyph it uses
+        "pdf.fonttype": 42,
+        "ps.fonttype": 42,
 
         # --- Axes ---
-        "axes.linewidth": 1.2,
+        "axes.linewidth": 0.7,
         "axes.spines.top": False,
         "axes.spines.right": False,
         "axes.grid": True,
         "axes.grid.axis": "both",
         "grid.alpha": 0.25,
         "grid.linestyle": "dotted",
-        "grid.linewidth": 0.6,
+        "grid.linewidth": 0.4,
 
         # --- Ticks ---
         "xtick.direction": "in",
         "ytick.direction": "in",
-        "xtick.major.size": 5,
-        "ytick.major.size": 5,
-        "xtick.major.width": 1.0,
-        "ytick.major.width": 1.0,
-        "xtick.minor.size": 3,
-        "ytick.minor.size": 3,
-        "xtick.minor.width": 0.6,
+        "xtick.major.size": 4,
+        "ytick.major.size": 4,
+        "xtick.major.width": 0.7,
+        "ytick.major.width": 0.7,
+        "xtick.minor.size": 2.5,
+        "ytick.minor.size": 2.5,
+        "xtick.minor.width": 0.5,
         "xtick.minor.visible": True,
         "ytick.minor.visible": True,
 
         # --- Lines & markers ---
-        "lines.linewidth": 1.8,
-        "lines.markersize": 6,
+        "lines.linewidth": 1.0,
+        "lines.markersize": 4,
         "lines.markeredgewidth": 0.5,
-        "patch.linewidth": 0.8,
+        "patch.linewidth": 0.6,
 
         # --- Legend ---
         "legend.frameon": True,
@@ -123,6 +144,12 @@ def apply_style_example(font_scale: float = 1.0):
         # --- Typography ---
         "font.family": "sans-serif",
         "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans", "sans-serif"],
+        # mathtext in Arial too (see apply_style)
+        "mathtext.fontset": "custom",
+        "mathtext.rm": "Arial",
+        "mathtext.it": "Arial:italic",
+        "mathtext.bf": "Arial:bold",
+        "mathtext.cal": "Arial:italic",
         "font.size": base_fs,
         "axes.titlesize": base_fs + 1,
         "axes.labelsize": base_fs,
@@ -134,7 +161,7 @@ def apply_style_example(font_scale: float = 1.0):
         # --- Figure ---
         "figure.dpi": 150,
         "savefig.dpi": 300,
-        "savefig.bbox": "tight",
+        "savefig.bbox": None,          # fixed canvas; see note in apply_style
         "savefig.pad_inches": 0.08,
         "figure.facecolor": "white",
 
@@ -285,7 +312,7 @@ def add_panel_label(ax, label, x=-0.08, y=1.06, **kwargs):
     """
     defaults = dict(
         transform=ax.transAxes,
-        fontsize=plt.rcParams["axes.titlesize"] + 2,
+        fontsize=plt.rcParams["font.size"] + 1,
         fontweight="bold",
         va="bottom",
         ha="left",
@@ -413,6 +440,34 @@ def save_figure(fig, name, out_dir=None, fmts=("pdf", "png"), **kwargs):
     for fmt in fmts:
         path = os.path.join(directory, f"{name}.{fmt}")
         fig.savefig(path, format=fmt, **kwargs)
+        # Journal-ready raster post-processing (2026-09-21): journals reject
+        # RGBA PNGs (empty alpha channel) and uncompressed TIFFs (multi-MB
+        # uploads fail). Re-save both with Pillow: PNG flattened to RGB,
+        # TIFF losslessly LZW-compressed, 300-dpi metadata preserved.
+        # The temp file sidesteps Windows file locking (source still open
+        # for read while writing).
+        if fmt in ("png", "tif"):
+            import tempfile as _tf
+            from PIL import Image as _Img
+            _im = _Img.open(path)
+            _im.load()
+            # journals reject alpha channels outright: PNG preflight checks
+            # for RGB, and TIFF readers vary on RGBA; the canvas below is
+            # opaque (figure facecolor), so flattening loses nothing
+            if _im.mode == "RGBA":
+                _im = _im.convert("RGB")
+            # Temp must live on the same drive as `path` — os.replace
+            # cannot move a file across volumes on Windows.
+            with _tf.NamedTemporaryFile(suffix="." + fmt, delete=False,
+                                        dir=os.path.dirname(path)) as _tmp:
+                _tmp_path = _tmp.name
+            if fmt == "png":
+                _im.save(_tmp_path, "PNG", dpi=(300, 300))
+            else:
+                _im.save(_tmp_path, "TIFF", compression="tiff_lzw",
+                         dpi=(300, 300))
+            _im.close()
+            os.replace(_tmp_path, path)
         print(f"  Saved: {path}")
 
 

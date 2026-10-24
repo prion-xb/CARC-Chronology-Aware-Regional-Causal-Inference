@@ -30,10 +30,27 @@ MAX_LAG_KA = 2.0
 WINDOW_WIDTH = 2.0
 WINDOW_STEP = 0.1
 
+# Canonical region order — matches 09_regional_robustness.py.
+PAPER_REGIONS = ['North_Atlantic', 'Antarctic', 'Tropical',
+                 'East_Asian_Monsoon', 'South_America', 'Other_Lakes']
+
 # ---------------------------------------------------------------------------
 # Phase lag via cross-correlation
 # ---------------------------------------------------------------------------
 def compute_phase_lag(x, y, dt, max_lag_ka=MAX_LAG_KA):
+    """Estimate the phase lag between x and y via cross-correlation.
+
+    Sign convention (matches synthetic.py Scenario A, where an edge
+    driver -> target with lag tau is implemented as
+    target(t) += c * driver(t - tau)):
+
+        lag > 0  =>  x leads y (y's response is delayed by |lag| ka behind x)
+        lag < 0  =>  y leads x
+
+    Returns
+    -------
+    lag : float (ka)
+    """
     lags_ka = np.arange(-max_lag_ka, max_lag_ka + dt, dt)
     shifts = (lags_ka / dt).astype(int)
     cors = np.full_like(lags_ka, np.nan, dtype=float)
@@ -48,7 +65,7 @@ def compute_phase_lag(x, y, dt, max_lag_ka=MAX_LAG_KA):
         if min_len < 10: continue
         cors[i] = np.corrcoef(x_s[:min_len], y_s[:min_len])[0, 1]
     best = np.nanargmax(cors)
-    return lags_ka[best]
+    return -lags_ka[best]
 
 
 def phase_analysis_window(arc_stacks, region_pairs, window_start, window_end,
@@ -80,6 +97,11 @@ def main():
     print("Loading records...")
     records, _ = load_all_records(DATA_DIR, age_min=10.0, age_max=60.0)
 
+    # Merge Southern Ocean records into the Antarctic composite,
+    # matching the paper's six composites ("Antarctic/Southern Ocean").
+    records = [(i, s, 'Antarctic' if r == 'Southern_Ocean' else r, n)
+               for i, s, r, n in records]
+
     region_dict = build_region_dict(records)
     print(f"Regions: {list(region_dict.keys())}")
 
@@ -106,18 +128,17 @@ def main():
         for i in range(arc_stacks[region].shape[0]):
             arc_stacks[region][i] = standardize(arc_stacks[region][i])
 
-    regions = list(arc_stacks.keys())
-    focus_pairs = [
-        ('North_Atlantic', 'Antarctic'),
-        ('North_Atlantic', 'Tropical'),
-        ('North_Atlantic', 'East_Asian_Monsoon'),
-        ('Tropical', 'East_Asian_Monsoon'),
-        ('Tropical', 'Antarctic'),
-    ]
-    focus_pairs = [(a, b) for a, b in focus_pairs if a in regions and b in regions]
+    regions = [r for r in PAPER_REGIONS if r in arc_stacks]
+    # All C(6,2) = 15 unordered region pairs, in the canonical region order —
+    # same enumeration as 09_regional_robustness.py.
+    focus_pairs = [(a, b) for i, a in enumerate(regions)
+                   for b in regions[i + 1:]]
+    print(f"Region pairs analyzed: {len(focus_pairs)} "
+          f"(= C({len(regions)}, 2) of {PAPER_REGIONS})")
 
     # Phase analysis per climate window
     print("\nPhase-lag analysis (lowpass σ=0.5 ka):")
+    print("Sign convention: lag > 0 => r1 leads r2; lag < 0 => r2 leads r1")
     lowpass_sigma = 0.5
     for label, (start, end) in CLIMATE_WINDOWS.items():
         print(f"\n{label} ({start}–{end} ka):")
@@ -131,6 +152,7 @@ def main():
                 continue
             lags = phase_results[(r1, r2)]
             med_lag = np.median(lags)
+            lo, hi = np.percentile(lags, [16, 84])
             sign_pos = np.sum(lags > MIN_LAG_KA) / N_PERTURB
             sign_neg = np.sum(lags < -MIN_LAG_KA) / N_PERTURB
             if sign_pos >= STABILITY_THRESHOLD:
@@ -139,7 +161,8 @@ def main():
                 direction = f"{r2} → {r1}"
             else:
                 direction = "unstable"
-            print(f"  {r1} ↔ {r2}: median lag={med_lag:+.3f} ka, "
+            print(f"  {r1} ↔ {r2}: median lag={med_lag:+.3f} ka "
+                  f"(16–84%: {lo:+.3f}…{hi:+.3f}), "
                   f"+={sign_pos:.1%}, -={sign_neg:.1%} → {direction}")
 
     print("\nDone.")

@@ -168,7 +168,11 @@ class CausalPipeline:
         if isinstance(self._detector, type(
             DetectorFactory.create('carc')
         )):
-            # CARC detector — pass forcing proxy and sigma dict
+            # CARC detector — pass forcing proxy and sigma dict; make sure
+            # the detector knows the grid spacing so age errors (ka) are
+            # converted to grid index units in the perturbation.
+            if hasattr(self._detector, '_dt'):
+                self._detector._dt = self._age_grid[1] - self._age_grid[0]
             edges = self._detector.detect(
                 self._data_dict,
                 forcing_proxy=self._forcing_proxy,

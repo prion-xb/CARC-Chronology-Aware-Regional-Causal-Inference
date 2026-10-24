@@ -21,6 +21,9 @@ from src.synthetic import generate_null_data
 from src.granger import granger_test_pair, robustness
 from src.arc import arc_deconfound
 
+# Fixed seed: makes the perturbation ensembles exactly reproducible
+np.random.seed(42)
+
 os.makedirs(FIGURE_DIR, exist_ok=True)
 
 
@@ -66,7 +69,6 @@ def experiment_fpr_vs_beta():
         carc_fpr.append(carc_fp / n_repeats)
         print(f"    Direct FPR={direct_fpr[-1]:.3f}, CARC FPR={carc_fpr[-1]:.3f}")
 
-    # Plot
     # Save results for reuse
     fpr_df = pd.DataFrame({
         'beta': beta_values,
@@ -75,10 +77,13 @@ def experiment_fpr_vs_beta():
     })
     fpr_df.to_csv(os.path.join(OUTPUT_DIR, 'fpr_vs_beta.csv'), index=False)
 
-    # Plot
+    _plot_fpr_vs_beta(fpr_df)
+
+
+def _plot_fpr_vs_beta(df):
     fig, ax = plt.subplots(figsize=(8, 5))
-    ax.plot(beta_values, direct_fpr, 'o-', label='Direct Granger', color='#D95319', linewidth=2)
-    ax.plot(beta_values, carc_fpr, 's-', label='CARC (95% honesty filter)', color='#4472C4', linewidth=2)
+    ax.plot(df['beta'], df['direct_fpr'], 'o-', label='Direct Granger', color='#D95319', linewidth=2)
+    ax.plot(df['beta'], df['carc_fpr'], 's-', label='CARC (95% honesty filter)', color='#4472C4', linewidth=2)
     ax.axhline(0.05, linestyle='--', color='gray', label='Nominal α = 5%')
     ax.set_xlabel('Common forcing strength (β)', fontsize=12)
     ax.set_ylabel('False Positive Rate', fontsize=12)
@@ -99,7 +104,7 @@ def experiment_stability_vs_error():
     print("=" * 60)
 
     from src.synthetic import generate_scenario_A
-    from src.config import TIER1_SIGMA, AGE_GRID_10_60, DT_HIGH_RES
+    from src.config import tier1_sigma, AGE_GRID_10_60, DT_HIGH_RES
     from src.arc import arc_deconfound_batch
     from scipy.ndimage import gaussian_filter1d
 
@@ -128,7 +133,7 @@ def experiment_stability_vs_error():
             for pert in range(n_perturb):
                 perturbed = {}
                 for var in residuals:
-                    sigma = TIER1_SIGMA.get(var, 1.0) * scale
+                    sigma = tier1_sigma(var) * scale
                     age_pert = AGE_GRID + np.random.normal(0, sigma, len(AGE_GRID))
                     idx = np.argsort(age_pert)
                     perturbed[var] = residuals[var][idx]
@@ -158,11 +163,15 @@ def experiment_stability_vs_error():
     stab_df = pd.DataFrame(rows)
     stab_df.to_csv(os.path.join(OUTPUT_DIR, 'stability_vs_error.csv'), index=False)
 
-    # Plot
+    _plot_stability_vs_error(stab_df)
+
+
+def _plot_stability_vs_error(df):
+    scales = sorted(df['error_scale'].unique())
     fig, ax = plt.subplots(figsize=(8, 5))
-    for edge in TRUE_EDGES:
-        rates = [results[s][edge] for s in scales]
-        ax.plot(scales, rates, 'o-', label=f'{edge[0]} → {edge[1]}')
+    for (driver, target), grp in df.groupby(['driver', 'target']):
+        rates = grp.sort_values('error_scale')['robustness'].values
+        ax.plot(scales, rates, 'o-', label=f'{driver} → {target}')
     ax.axhline(0.95, color='gray', linestyle='--', label='95% threshold')
     ax.set_xlabel('Age error scaling factor')
     ax.set_ylabel('Detection Stability')
@@ -175,6 +184,19 @@ def experiment_stability_vs_error():
 
 
 if __name__ == "__main__":
-    experiment_fpr_vs_beta()
-    experiment_stability_vs_error()
+    import argparse
+    parser = argparse.ArgumentParser(description='Synthetic validation experiments')
+    parser.add_argument('--plot-only', action='store_true',
+                        help='Skip the experiments; redraw figures from the '
+                             'cached CSVs in outputs/ (fpr_vs_beta.csv, '
+                             'stability_vs_error.csv)')
+    args = parser.parse_args()
+    if args.plot_only:
+        fpr_df = pd.read_csv(os.path.join(OUTPUT_DIR, 'fpr_vs_beta.csv'))
+        stab_df = pd.read_csv(os.path.join(OUTPUT_DIR, 'stability_vs_error.csv'))
+        _plot_fpr_vs_beta(fpr_df)
+        _plot_stability_vs_error(stab_df)
+    else:
+        experiment_fpr_vs_beta()
+        experiment_stability_vs_error()
     print("\nDone.")

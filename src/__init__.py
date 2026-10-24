@@ -23,7 +23,7 @@ from .config import (
     STABILITY_THRESHOLD, MIN_POINTS_IN_EVENT, NOISE_STD,
     CLIMATE_WINDOWS, AGE_MODEL_SIGMA, RECORD_AGE_MODEL,
     SPECIAL_SIGMA, DEFAULT_SIGMA, TIER1_FILES, TIER1_SIGMA,
-    get_sigma,
+    TIER1_SIGMA_ALIASES, get_sigma, tier1_sigma,
 )
 
 # =========================================================================

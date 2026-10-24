@@ -1,0 +1,77 @@
+Record,Tier,Region,Basis,S2_File_IDs
+NGRIP_d18O,Tier 1,North_Atlantic,S4_named,Erhardt_NGRIP_aerosol_d18O_step1
+ODP983_IRD,Tier 1,North_Atlantic,S4_named,2_ODP983-IRD
+ODP983_NPS,Tier 2,North_Atlantic,S4_named,2_Barker 2019-NPS
+ODP980_planktic_d18O,Tier 2,North_Atlantic,S4_named,3_ODP980-δ18O_Planktic
+ODP980_benthic_d18O,Tier 3,North_Atlantic,S4_named,3_Mcmanus-ODP980-d18O
+U1308_RPI,Tier 2,North_Atlantic,S4_named,6_313-U1308_rpi
+U1308_SiSr,Tier 2,North_Atlantic,S4_named,6_U1308-Si-Sr=0-800kyr
+U1302-3_MS,Tier 2,North_Atlantic,S4_named,5_susceptibility=kappa
+U1302-3_SiSr,Tier 2,North_Atlantic,S4_named,5_U1302-U1303_Ca_Sr;5_U1302-U1303_Si_Sr
+U1302-3_d18O,Tier 2,North_Atlantic,S4_named,5_U1302-U1303_d18O
+U1313_SST,Tier 3,North_Atlantic,geography,8_Naafs et al-EPSL-2012=2.7Ma=SST;8_SST=0-2.7Ma
+EDC_dD,Tier 1,Antarctic_SouthernOcean,S4_named,32_Jouzel-2007-dD
+EDC_CO2,Tier 1,Antarctic_SouthernOcean,S4_named,32_Bereiter et al.-2015-GRL-revised CO2
+EDC_CH4,Tier 2,Antarctic_SouthernOcean,S4_named,32_CH4 over past 800kyr
+EDC_Dust,Tier 1,Antarctic_SouthernOcean,S4_named,32_EDC-dust-2012-no NaN
+DomeFuji_dD,Tier 2,Antarctic_SouthernOcean,S4_named,33_Dome fuji-dD
+DomeFuji_d18O,Tier 2,Antarctic_SouthernOcean,S4_named,33_Dome fuji 2018 d18O
+ODP1090_Dust,Tier 2,Antarctic_SouthernOcean,S4_named,25_ODP1090-Dust-0-800kyr
+ODP1090_FeMAR,Tier 2,Antarctic_SouthernOcean,S4_named,25_ODP1090-Fe MAR=0-800
+ODP1094_BaFe,Tier 2,Antarctic_SouthernOcean,S4_named,27_ODP 1094=Jaccard2013=Ba-Fe
+PS75-059-2_Fe,Tier 3,Antarctic_SouthernOcean,S4_named,28_PS75_059-2_Fe
+PS75-076-2_Fe,Tier 3,Antarctic_SouthernOcean,S4_named,29_PS75_076-2_Fe=0-800
+PS75-074-3_Fe,Tier 3,Antarctic_SouthernOcean,S4_named,30_PS75_074-3_Fe=0-800
+U1537_NGR,Tier 3,Antarctic_SouthernOcean,S4_named,31_U1537-NGR
+U1537_MS_AR,Tier 2,Antarctic_SouthernOcean,S4_named,31_U1537_MS AR
+MD00-2361_d18O,Tier 2,Antarctic_SouthernOcean,geography,23-1_MD00-2361-d18O
+MD00-2361_logFeCa,Tier 2,Antarctic_SouthernOcean,geography,23-1_log Fe-Ca=800ka
+MD00-2361_logZrFe,Tier 2,Antarctic_SouthernOcean,geography,23-1_log Zr-Fe=800ka
+MD97-2120_d18O,Tier 2,Antarctic_SouthernOcean,geography,26_MD97-2021_d18O_Plank-TD
+Cariaco_Mo,Tier 1,Tropical,S4_named,16_MD2622ODP1002-Mo
+U1542_SST,Tier 2,Tropical,S4_named,26-1_383-U1542_SST
+U1542_CHC,Tier 2,Tropical,S4_named,26-1_383-U1542_CHC
+U1385_ZrSr,Tier 2,Tropical,S4_named,9_U1385=Zr-Sr LR04 age model;9_U1385-Ca-Ti
+MD01-2443_CaTi,Tier 2,Tropical,S4_named,8-2_MD01-2443-4=Ca-Ti=440ka
+MD01-2443_UK37_SST,Tier 2,Tropical,S4_named,8-1_MD01-2443-4=0-420ka Uk37-SST
+U1446_RbCa,Tier 2,Tropical,geography,15-1_clemens2021-u1446-Rb-Ca
+U1446_d18Osw,Tier 3,Tropical,geography,15-1_clemens2021-u1446-d18Osw
+MD05-2925_d18O,Tier 2,Tropical,S4_named,18-1_G_ruber_d18O
+MD05-2925_MgCa_SST,Tier 2,Tropical,S4_named,18-1_G_ruber_Mg-Ca_SST
+MD01-2518_DSR,Tier 2,Tropical,geography,14-1_MD-2518-DSR
+MD01-2519_DSR,Tier 2,Tropical,geography,14-1_MD-2519-DSR
+ODP967_Dust,Tier 2,Tropical,S4_named,12_ODP967=Ba-Al
+ODP967_WetDryIndex,Tier 3,Tropical,S4_named,12_ODP967 wet_dry index=800ka;12_ODP967 wet_dry index
+ODP1089_SST,Tier 2,Tropical,S4_named,24_ODP1089-SST
+U1483_benthic_d18O,Tier 3,Tropical,S4_named,20-1_363-U1483_P_wuellerstorfi_d18O
+U1483_logKCa,Tier 2,Tropical,S4_named,20-1_363-U1483_XRF_scan_corrected-log K-Ca
+IPWP_OHC,Tier 2,Tropical,S4_named,18_IPWP OHC-stack
+U1476_benthic_d18O,Tier 3,Tropical,S4_named,22_U1476-Benthic=0-800
+KX97322-4_d18O,Tier 3,Tropical,S4_named,17_d18OG.rub
+KX97322-4_MgCa_SST,Tier 3,Tropical,S4_named,17_KX97322-4=0°S=360kyr=G.ruber=Mg-Ca
+ODP663_CaCO3,Tier 3,Tropical,S4_named,17-1_ODP663-800ka=CaCO3=0-800ka
+ODP663_Terrigenous,Tier 3,Tropical,S4_named,17-1_ODP663-800ka=terrigenous=0-800ka
+ODP663_bSiO2,Tier 3,Tropical,S4_named,17-1_ODP663-800ka=bSiO2=0-800ka
+ODP1143_UK37_SST,Tier 3,Tropical,geography,16-1_ODP 184-1143-UK37_SST=800ka
+ODP1146_Al,Tier 3,Tropical,geography,15-0_ODP1146=Al=0-800ka
+ODP1146_Terrigenous,Tier 3,Tropical,geography,15-0_ODP1146=terrigenous=0-800ka
+U1391_planktic_d18O,Tier 3,Tropical,cluster,11_U1391_G_bulloides_δ18O
+U1391_benthic_d18O,Tier 3,Tropical,cluster,11_U1391A_U1391B_benthic_δ18O
+Malawi_Ca,Tier 2,Tropical,geography,20_Lake Malawi-Ca=0-800kyr
+M125-73-3_lnKAl,Tier 2,Tropical,geography,21_ln K-Al
+M125-73-3_lnTiCa,Tier 2,Tropical,geography,21_ln Ti-Ca
+Cheng2016_d18O,Tier 1,East_Asian_Monsoon,S4_named,14_cheng2016composite-noaa
+Gulang_FeK,Tier 2,East_Asian_Monsoon,S4_named,10_GL-Fe-K
+Luochuan_GT32,Tier 3,East_Asian_Monsoon,S4_named,11-2_LC GT32
+Yimaguan_GT32,Tier 2,East_Asian_Monsoon,S4_named,11-2_YMG GT32
+CHB14_KZr,Tier 2,East_Asian_Monsoon,geography,16-2_CHB14=K-Zr
+ZB13_Pollen,Tier 3,East_Asian_Monsoon,geography,13_Pollen=0-800kyr
+Botuvera_d13C,Tier 2,South_America,S4_named,"23-2_Botuvera Cave, δ13C"
+Botuvera_d18O,Tier 2,South_America,S4_named,"23-2_Botuvera Cave, δ18O"
+Titicaca_MS,Tier 2,South_America,S4_named,23_Fritz-2007=Lake Titicaca_MS
+Elgygytgyn_MS,Tier 2,HighLat_Lakes,S4_named,1_elgygytgyn2012-MS
+Elgygytgyn_TOC,Tier 2,HighLat_Lakes,S4_named,1_elgygytgyn2012-TOC=0-800kyr
+Elgygytgyn_SiTi,Tier 2,HighLat_Lakes,S4_named,1_elgygytgyn2012-Si-Ti=0-800kyr
+Baikal_BioSilica,Tier 3,HighLat_Lakes,S4_named,4_Bio silica=0-800ka
+Junin_GI,Tier 2,HighLat_Lakes,S4_named,19_Rodbell2022-junin-GI
+Ohrid_CaK,Tier 2,HighLat_Lakes,S4_named,7_Ohrid Ca-K=0-800kyr

@@ -120,44 +120,81 @@ SPECIAL_SIGMA = {
     '32_CH4 over past 800kyr':                  1.66,
     '16_MD2622ODP1002-Mo':                      0.23,
     '14_cheng2016composite-noaa':               0.14,
+    '32_EDC-dust-2012-no NaN':                  1.50,   # AICC2012, per err file
     # Other high-quality records
     '33_Dome fuji 2018 d18O':                   1.50,
     '33_Dome fuji-dD':                          1.50,
     '2_ODP983-IRD':                             2.00,
+    'Lapa_d18O':                                0.39,   # paper line 161 "about 0.39 ka";
+                                                       # pair RMS 0.45 = mean(0.39, 0.50)
 }
 
 # Tier 1 core records (Table 1–4 in paper): label → filename in proxy_records/
+# Labels are the canonical variable names used in scripts 05/06/15 and the paper.
 TIER1_FILES = {
-    'NGRIP_d18O':      'Erhardt_NGRIP_aerosol_d18O_step1.csv',
-    'EDC_dD':          '32_Jouzel-2007-dD.csv',
-    'EDC_CO2':         '32_Bereiter et al.-2015-GRL-revised CO2 .xlsx',
-    'EDC_CH4':         '32_CH4 over past 800kyr.csv',
-    'Cariaco_Mo':      '16_MD2622ODP1002-Mo.csv',
-    'Cheng2016_d18O':  '14_cheng2016composite-noaa.xlsx',
+    'NGRIP':      'Erhardt_NGRIP_aerosol_d18O_step1.csv',
+    'EDC_dD':     '32_Jouzel-2007-dD.csv',
+    'EDC_CO2':    '32_Bereiter et al.-2015-GRL-revised CO2 .xlsx',
+    'EDC_CH4':    '32_CH4 over past 800kyr.csv',
+    'Cariaco':    '16_MD2622ODP1002-Mo.csv',
+    'Cheng2016':  '14_cheng2016composite-noaa.xlsx',
 }
 
 # Tier 1 sigma overrides: label → sigma_ka
 TIER1_SIGMA = {
-    'NGRIP_d18O':      0.65,
-    'EDC_dD':          0.83,
-    'EDC_CO2':         1.65,
-    'EDC_CH4':         1.66,
-    'Cariaco_Mo':      0.23,
-    'Cheng2016_d18O':  0.14,
+    'NGRIP':     0.65,
+    'EDC_dD':    0.83,
+    'EDC_CO2':   1.65,
+    'EDC_CH4':   1.66,
+    'Cariaco':   0.23,
+    'Cheng2016': 0.14,
 }
+
+# Short aliases used by the synthetic-data generator in
+# scripts/03_synthetic_validation.py ('CO2', 'CH4', 'Cheng').
+TIER1_SIGMA_ALIASES = {
+    'CO2':   'EDC_CO2',
+    'CH4':   'EDC_CH4',
+    'Cheng': 'Cheng2016',
+}
+
+
+def tier1_sigma(name):
+    """Return the published 1σ age uncertainty for a Tier 1 variable.
+
+    Resolves short aliases used by the synthetic generator
+    (``TIER1_SIGMA_ALIASES``); falls back to 1.0 ka for unknown names.
+    """
+    return TIER1_SIGMA.get(TIER1_SIGMA_ALIASES.get(name, name), 1.0)
 
 # ---------------------------------------------------------------------------
 # Helper: get sigma for any record
 # ---------------------------------------------------------------------------
-def get_sigma(record_name):
+def get_sigma(record_name, archive_type=None):
     """Return the age-model 1σ uncertainty (ka) for a given record.
 
-    Falls back to DEFAULT_SIGMA[archive_type] when no override exists.
+    Resolution order:
+    1. SPECIAL_SIGMA[record_name] — per-record published values
+    2. RECORD_AGE_MODEL[record_name] → AGE_MODEL_SIGMA — by named age model
+    3. DEFAULT_SIGMA[archive_type] — by archive type (ice_core, marine, etc.)
+    4. 1.5 ka — universal fallback
+
+    Parameters
+    ----------
+    record_name : str
+        Record identifier (filename stem without extension).
+    archive_type : str or None
+        One of 'ice_core', 'marine', 'speleothem', 'loess', 'lake', 'other'.
+        Used as final fallback when no per-record override exists.
     """
     if record_name in SPECIAL_SIGMA:
         return SPECIAL_SIGMA[record_name]
-    age_model = RECORD_AGE_MODEL.get(record_name, 'Mixed')
-    return AGE_MODEL_SIGMA.get(age_model, 1.5)
+    age_model = RECORD_AGE_MODEL.get(record_name, None)
+    if age_model is not None:
+        return AGE_MODEL_SIGMA.get(age_model, 1.5)
+    if archive_type is not None:
+        return DEFAULT_SIGMA.get(archive_type, 1.5)
+    return 1.5
 
 
 # Ensure output directories exist

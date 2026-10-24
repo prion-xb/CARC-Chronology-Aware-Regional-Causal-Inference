@@ -54,8 +54,13 @@ class PaleoDataGenerator:
     def _init_scenario_A(self):
         """Scenario A: event–millennial scale, high-resolution 10–60 ka records.
 
-        Parameters match :data:`src.synthetic.SCENARIO_A_CONFIG`, which is the
-        canonical source used for the paper's synthetic validation (Table S1).
+        Per-record parameters follow the data-grounded canonical set
+        (scripts/22_scenarioA_final.py, src.synthetic.SCENARIO_A_CONFIG):
+        noise_std = innovation std of the marginal AR(1) fitted to each
+        Tier-1 real record; phi = CALIBRATED generator AR coefficient whose
+        generated marginal AR(1) matches the fitted one under the common
+        forcing (primary loading beta = 0.25); age errors = published
+        1-sigma age-model uncertainties.
         """
         self.dt = 0.05            # ka → 50-year resolution
         self.total_time = 65.0    # generate 65 ka, trim boundary effects → 50 ka
@@ -63,22 +68,19 @@ class PaleoDataGenerator:
 
         self.var_names = ['NGRIP', 'EDC_dD', 'CO2', 'CH4', 'Cariaco', 'Cheng']
 
-        # Autoregressive coefficients (Table S1, φ ∈ [0.72, 0.90])
+        # Calibrated autoregressive coefficients (data-grounded, see above)
         self.phi = {
-            'NGRIP': 0.82, 'EDC_dD': 0.80, 'CO2': 0.90,
-            'CH4': 0.88, 'Cariaco': 0.72, 'Cheng': 0.75
+            'NGRIP': 0.6388, 'EDC_dD': 0.8515, 'CO2': 0.9355,
+            'CH4': 0.9101, 'Cariaco': 0.8345, 'Cheng': 0.8409
         }
 
         self.noise_std = {
-            'NGRIP': 0.45, 'EDC_dD': 0.55, 'CO2': 0.80,
-            'CH4': 0.70, 'Cariaco': 0.30, 'Cheng': 0.25
+            'NGRIP': 0.7015, 'EDC_dD': 0.2988, 'CO2': 0.0707,
+            'CH4': 0.1114, 'Cariaco': 0.3771, 'Cheng': 0.3575
         }
 
-        # Common forcing loading (Table S1, β)
-        self.forcing_weights = {
-            'NGRIP': 0.35, 'EDC_dD': 0.35, 'CO2': 0.25,
-            'CH4': 0.25, 'Cariaco': 0.40, 'Cheng': 0.40
-        }
+        # Common forcing loading (primary scenario value, swept in the paper)
+        self.forcing_weights = {v: 0.25 for v in self.var_names}
 
         # Ground-truth causal graph: (driver, responder) → lag (ka)
         self.causal_edges = {
@@ -88,7 +90,7 @@ class PaleoDataGenerator:
         }
         self.causal_strength = {edge: 0.40 for edge in self.causal_edges}
 
-        # Age error std (1σ, ka) per variable (Table S1)
+        # Age error std (1σ, ka) per variable (published age-model uncertainties)
         self.age_error_std = {
             'NGRIP': 0.65, 'EDC_dD': 0.83, 'CO2': 1.65,
             'CH4': 1.66, 'Cariaco': 0.23, 'Cheng': 0.14

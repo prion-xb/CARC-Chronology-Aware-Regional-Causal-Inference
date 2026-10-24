@@ -69,3 +69,5 @@ figures_new/
 
 # Claude (session data, not source)
 .claude/
+
+.pytest_cache/

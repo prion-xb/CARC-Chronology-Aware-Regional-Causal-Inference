@@ -1,26 +1,52 @@
-# CARC — Chronology-Aware Robustness Causality
+# CARC — Chronology-Aware Regional Consensus Framework
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://python.org)
 
-An **object-oriented framework** for detecting causal lead–lag relationships
-among time-series variables, with built-in handling of time-axis uncertainty
-and common-forcing confounding.
+CARC detects causal lead–lag relationships among paleoclimate proxy records
+while accounting for two failure modes: **age-model uncertainty** (chronology
+errors can create spurious leads/lags) and **common-forcing confounding**
+(shared external drivers such as North Atlantic climate can make independent
+records look causally linked).
 
-## Architecture
+Edges are accepted only if they pass the **honesty filter**: after ARC
+deconfounding and a ≥95% pass rate across the age-perturbation ensemble.
 
-The project is built around two class hierarchies with **Factory**, **Strategy**,
-and **Template Method** design patterns:
+## Reproducing the paper results
 
+Every table in the paper is produced by a script in `scripts/`. The full
+product-to-script map, run instructions, and known caveats are in
+[README_复现指南.md](README_复现指南.md). Summary:
+
+| Paper result | Script | On-disk output (after a run) |
+| :--- | :--- | :--- |
+| Table 1 (Scenario A, 20×200) | `scripts/22_scenarioA_final.py` | `outputs/scenarioA_final_table1.csv` |
+| Table 2 (CCM / PCMCI) | `scripts/39_table2_zzf.py` | `outputs/table2_zzf_ccm_pcmci.csv` |
+| Table 4 / Table S4 (six climate windows, 180 directed cells) | `scripts/06_conditional_causality.py` | `outputs/conditional_causality_allpairs.csv` |
+| Table 5 (regional phase lags) | `scripts/08_regional_phase_lag.py` | — |
+| Table S5 (80-record pairwise scan + ablations) | `scripts/19_full_pairwise_scan.py` | `outputs/pairwise_scan/` |
+| §4.3 regional pairs | `scripts/09_regional_robustness.py` → `scripts/17_regional_pairwise_matrix.py` | `outputs/regional_robustness_windows.csv` |
+| Table S2 / S4 record accounting | `scripts/01_preprocess_data.py` + `data/data_tiers_final.csv` | `data/` |
+
+All drivers have a `--quick` smoke mode (see each script's docstring). Full
+runs are deterministic (fixed seeds) but heavy; e.g. the Table 1 driver's
+full run is 20 realizations × 200 perturbations over a 144-config screening
+grid (checkpointed, resumable). Script outputs land in `outputs/`; the
+paper-table xlsx versions live in `Tables/` (both are git-ignored while the
+manuscript is under review — see `.gitignore`).
+
+```bash
+pip install -r requirements.txt
+python main.py --demo              # architecture demo, no data needed
+
+cd scripts
+python 22_scenarioA_final.py --quick     # Table 1 smoke (2×40)
+python 39_table2_zzf.py --quick          # Table 2 smoke (1×20)
 ```
-PaleoRecord (ABC)                    CausalDetector (ABC)
-├── IceCoreRecord                    ├── StandardGrangerDetector
-├── MarineRecord                     └── CARCDetector
-├── SpeleothemRecord
-└── TerrestrialRecord
 
-RecordFactory    DetectorFactory    CausalPipeline
-```
+Table 2 additionally requires `tigramite>=5.0` (PCMCI, `ParCorr`). The CCM
+column uses a numpy implementation validated against pyEDM 2.5; pyEDM itself
+is optional (Windows note: `legacy=True`).
 
 ## Quick Start
 
@@ -29,59 +55,50 @@ pip install -r requirements.txt
 python main.py --demo
 ```
 
-The `--demo` flag runs a self-contained architecture demonstration using synthetic
-data — no external data files needed.
-
-## CLI Usage
-
 ```bash
 python main.py                       # CARC pipeline (needs data in proxy_records/)
-python main.py --demo                # OOP architecture demo (no data needed)
-python main.py --method granger      # Use standard Granger instead of CARC
+python main.py --method granger      # Standard Granger instead of CARC
 ```
 
 ## Project Structure
 
 ```
 ├── main.py                 # Entry point (demo + full pipeline)
-├── proxy_records/          # 91 proxy record CSV/XLSX files
+├── proxy_records/          # 83 proxy record CSV files
 ├── proxy_errors/           # Age-model error files per record
-├── data/                   # Data quality scores, orbital-forcing data
-├── scripts/                # 15 analysis pipeline scripts (01 → 15)
+├── data/                   # Tier assignments, quality scores, orbital forcing
+├── scripts/                # Analysis drivers 01–63 + fignew/ figure rebuilds
+├── Tables/                 # Paper tables (xlsx, the shipped reference)
+├── outputs/                # Shipped reference outputs of the paper runs
 ├── tests/                  # Unit tests
 ├── src/
-│   ├── records.py          # PaleoRecord ABC + 4 archive-type subclasses
+│   ├── records.py          # PaleoRecord ABC + archive-type subclasses
 │   ├── detectors.py        # CausalDetector ABC + StandardGranger + CARC
-│   ├── factory.py          # RecordFactory + DetectorFactory (Factory pattern)
-│   ├── pipeline.py         # CausalPipeline (Strategy pattern)
-│   ├── config.py           # Central configuration
+│   ├── factory.py          # RecordFactory + DetectorFactory
+│   ├── pipeline.py         # CausalPipeline
+│   ├── config.py           # Central configuration (paths, sigmas, windows)
 │   ├── io.py               # Data loading utilities
 │   ├── arc.py              # Adaptive Residual Causality deconfounding
-│   ├── granger.py          # Granger causality + age-perturbation utilities
+│   ├── granger.py          # Granger tests + age-perturbation utilities
+│   ├── granger_fast.py     # Block-Gram fast variant (used where noted)
 │   ├── stacking.py         # Regional ensemble stacking
 │   ├── synthetic.py        # Synthetic data generation (Scenario A)
 │   ├── paleo_generator.py  # Class-based paleoclimate data generator
-│   ├── validation.py       # Method comparison framework
+│   ├── validation.py       # CCM / PCMCI comparison testers
 │   ├── visualization.py    # Publication-quality plotting utilities
-│   └── geolocation.py      # Record coordinates and regional metadata
+│   ├── geolocation.py      # Record coordinates and regional metadata
+│   └── ...
 ├── requirements.txt
 ├── pyproject.toml
 └── LICENSE
 ```
 
-## Design Patterns
-
-| Pattern | Where | Purpose |
-|---------|-------|---------|
-| **Factory** | `RecordFactory`, `DetectorFactory` | Create correct subclass by name/keyword |
-| **Strategy** | `CausalPipeline` ↔ `CausalDetector` | Swap detection methods without changing pipeline |
-| **Template Method** | `CausalDetector.detect()` | Define algorithm skeleton; subclasses fill steps |
-
 ## Requirements
 
 - Python ≥ 3.9
 - numpy, scipy, pandas, statsmodels, scikit-learn
-- See `requirements.txt` for full list
+- tigramite ≥ 5.0 (Table 2 / PCMCI only)
+- See `requirements.txt` for the full list
 
 ## License
 

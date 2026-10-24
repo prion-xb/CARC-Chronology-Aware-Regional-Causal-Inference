@@ -121,6 +121,11 @@ def main():
     print("Loading records (0-800 ka)...")
     records, _ = load_all_records(DATA_DIR, age_min=0.0, age_max=800.0)
 
+    # Merge Southern Ocean records into the Antarctic composite,
+    # matching the paper's six composites ("Antarctic/Southern Ocean").
+    records = [(i, s, 'Antarctic' if r == 'Southern_Ocean' else r, n)
+               for i, s, r, n in records]
+
     # Re-interpolate to DT=1.0 grid
     from scipy import interpolate
     aligned = []

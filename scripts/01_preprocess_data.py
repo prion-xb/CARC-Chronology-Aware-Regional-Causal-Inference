@@ -16,8 +16,8 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from src.config import DATA_DIR, OUTPUT_DIR
-from src.io import identify_columns, load_record
+from src.config import DATA_DIR, OUTPUT_DIR, SPECIAL_SIGMA
+from src.io import identify_columns, load_record, read_record_df
 from src.stacking import classify_record  # canonical classification
 
 # ---------------------------------------------------------------------------
@@ -30,11 +30,9 @@ H4_START, H4_END = 36.0, 40.0           # Heinrich 4 window
 W_SNR, W_TREND, W_RES, W_COVERAGE = 0.35, 0.30, 0.20, 0.15
 MIN_POINTS_IN_EVENT = 5
 
-HIGH_QUALITY_RECORDS = [
-    'NGRIP_d18O', 'EDC_dD', 'EDC_CO2', 'EDC_CH4',
-    'Cariaco_Mo', 'Cheng2016_d18O', 'Lapa_d18O',
-    'WAIS_CH4', 'ODP983_IRD'
-]
+# High-quality records = records with published per-record age uncertainties.
+# Single source of truth: SPECIAL_SIGMA in src/config.py (9 records).
+HIGH_QUALITY_RECORDS = set(SPECIAL_SIGMA.keys())
 
 
 # ---------------------------------------------------------------------------
@@ -98,13 +96,14 @@ def determine_record_type(filename):
 # Main
 # ---------------------------------------------------------------------------
 def main():
-    files = sorted([f for f in os.listdir(DATA_DIR) if f.endswith('.csv')])
+    files = sorted([f for f in os.listdir(DATA_DIR)
+                    if f.endswith('.csv') or f.endswith('.xlsx')])
     records = []
 
     for filename in files:
         filepath = os.path.join(DATA_DIR, filename)
         try:
-            df = pd.read_csv(filepath)
+            df = read_record_df(filepath)
         except Exception as e:
             print(f"Skip {filename}: read error ({e})")
             continue
@@ -124,15 +123,23 @@ def main():
             print(f"Skip {filename}: <10 points")
             continue
 
-        record_name = filename.replace('.csv', '')
+        record_name = os.path.splitext(filename)[0]
         rec_type = determine_record_type(filename)
+
+        # Trim to the target interval (10–60 ka): quality metrics are scored
+        # on the event-scale window, matching the paper's tiering semantics.
+        in_target = (age >= TARGET_START) & (age <= TARGET_END)
+        age, value = age[in_target], value[in_target]
+        if len(age) < 10:
+            print(f"Skip {filename}: <10 points in 10-60 ka")
+            continue
+
         age_min, age_max = np.min(age), np.max(age)
         n_points = len(age)
 
         age_diffs = np.diff(age)
         res_median = np.median(age_diffs) if len(age_diffs) > 0 else np.nan
-        in_target = (age >= TARGET_START) & (age <= TARGET_END)
-        coverage_global = np.sum(in_target) / n_points
+        coverage_global = 1.0  # all points lie within the target interval
 
         h1 = compute_event_metrics(age, value, H1_START, H1_END)
         h4 = compute_event_metrics(age, value, H4_START, H4_END)

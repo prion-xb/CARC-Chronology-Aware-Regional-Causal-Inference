@@ -431,7 +431,7 @@ def _draw_method_comparison(ax, sweep, base_fs):
 
     # CARC — real data
     ax.plot(snr, sweep['carc_tpr'], color=METHOD_COLORS['CARC'],
-            linewidth=3.5, marker='o', markersize=9,
+            linewidth=1.8, marker='o', markersize=5,
             markerfacecolor='white', markeredgewidth=2.2,
             label='CARC (this study)', zorder=8)
     ax.fill_between(snr,
@@ -441,7 +441,7 @@ def _draw_method_comparison(ax, sweep, base_fs):
 
     # Granger — real data
     ax.plot(snr, sweep['granger_tpr'], color=METHOD_COLORS['Granger'],
-            linewidth=3.5, marker='s', markersize=9,
+            linewidth=1.8, marker='s', markersize=5,
             markerfacecolor='white', markeredgewidth=2.2,
             label='Standard Granger', zorder=7)
     ax.fill_between(snr,
@@ -451,14 +451,14 @@ def _draw_method_comparison(ax, sweep, base_fs):
 
     # CCM — standalone (real computation, on raw data)
     ax.plot(snr, sweep['ccm_tpr'], color=METHOD_COLORS['CCM'],
-            linewidth=3.0, marker='^', markersize=8,
+            linewidth=0.8, marker='^', markersize=5,
             markerfacecolor='white', markeredgewidth=1.8,
             linestyle='--', dashes=(6, 3),
             label=r'CCM (standalone, $\phi$=0.8 degrades detection)', zorder=6)
 
     # PCMCI — standalone (real computation, on raw data)
     ax.plot(snr, sweep['pcmci_tpr'], color=METHOD_COLORS['PCMCI'],
-            linewidth=3.0, marker='d', markersize=8,
+            linewidth=0.8, marker='d', markersize=5,
             markerfacecolor='white', markeredgewidth=1.8,
             linestyle='--', dashes=(3, 3),
             label='PCMCI (standalone, over-conservative)', zorder=5)
@@ -468,20 +468,20 @@ def _draw_method_comparison(ax, sweep, base_fs):
     above = np.where(carc_arr >= 0.95)[0]
     if len(above) > 0:
         crit_snr = snr[above[0]]
-        ax.axvline(crit_snr, color='#333333', linestyle=':', linewidth=2.0, alpha=0.6)
+        ax.axvline(crit_snr, color='#333333', linestyle=':', linewidth=1.0, alpha=0.6)
         ax.annotate(f'Critical SNR\n≈ {crit_snr:.2f}',
                     xy=(crit_snr, 0.95), xytext=(crit_snr + 0.08, 0.80),
-                    fontsize=base_fs - 1, fontweight='bold', color='#333333',
-                    arrowprops=dict(arrowstyle='->', color='#555555', lw=1.5),
+                    fontsize=base_fs + 1, fontweight='bold', color='#333333',
+                    arrowprops=dict(arrowstyle='->', color='#555555', lw=0.8),
                     bbox=dict(boxstyle='round', facecolor='white',
                               edgecolor='#CCCCCC', alpha=0.9))
 
-    ax.axhline(0.95, color='#555555', linestyle='--', linewidth=2.0, alpha=0.6)
-    ax.text(0.10, 0.962, '95% honesty threshold', fontsize=base_fs - 2,
+    ax.axhline(0.95, color='#555555', linestyle='--', linewidth=1.0, alpha=0.6)
+    ax.text(0.10, 0.962, '95% honesty threshold', fontsize=base_fs - 1,
             color='#555555', va='bottom', ha='left', fontweight='bold')
 
-    ax.set_xlabel('Signal-to-Noise Ratio (SNR)', fontsize=base_fs + 2, fontweight='bold')
-    ax.set_ylabel('True Positive Rate (TPR)', fontsize=base_fs + 2, fontweight='bold')
+    ax.set_xlabel('Signal-to-Noise Ratio (SNR)', fontsize=base_fs + 1, fontweight='bold')
+    ax.set_ylabel('True Positive Rate (TPR)', fontsize=base_fs + 1, fontweight='bold')
     ax.set_xlim(0.05, 1.05)
     ax.set_ylim(-0.04, 1.12)
     ax.legend(fontsize=base_fs, loc='lower right', framealpha=0.9,
@@ -491,8 +491,8 @@ def _draw_method_comparison(ax, sweep, base_fs):
     ax.xaxis.set_minor_locator(AutoMinorLocator(2))
     ax.yaxis.set_minor_locator(AutoMinorLocator(2))
     ax.set_title('Method Comparison: Detection Rate vs Signal Quality',
-                 fontweight='bold', fontsize=base_fs + 3, pad=8)
-    add_panel_label(ax, '(a)', x=0.02, y=0.92, fontsize=base_fs + 4)
+                 fontweight='bold', fontsize=base_fs + 2, pad=8)
+    add_panel_label(ax, '(a)', x=0.02, y=0.92, fontsize=base_fs + 2)
 
 
 def _draw_alpha_noise_heatmap(ax, results, base_fs):
@@ -534,33 +534,57 @@ def _draw_alpha_noise_heatmap(ax, results, base_fs):
     cf = ax.contourf(Xi, Yi, Zi, levels=levels, cmap='YlOrRd', extend='both')
     cs = ax.contour(Xi, Yi, Zi, levels=[1.0, 2.0, 3.0, 5.0, 7.0],
                     colors='#333333', linewidths=0.8, alpha=0.55, linestyles='--')
-    ax.clabel(cs, inline=True, fontsize=base_fs - 3, fmt='DDR=%.0f')
-
-    # Default ★ — dark bold marker, distinct from heatmap colours
-    ax.scatter([DEFAULT_ALPHA], [DEFAULT_NOISE_STD], marker='*', s=350,
-               c='#2166AC', edgecolors='white', linewidth=2.0, zorder=10)
-    ax.annotate(f'Default\nα={DEFAULT_ALPHA}, σ={DEFAULT_NOISE_STD}',
-                xy=(DEFAULT_ALPHA, DEFAULT_NOISE_STD),
-                xytext=(DEFAULT_ALPHA + 0.22, DEFAULT_NOISE_STD + 0.22),
-                fontsize=base_fs - 3, fontweight='bold', color='#2166AC',
-                arrowprops=dict(arrowstyle='->', color='#2166AC', lw=1.5,
-                               connectionstyle='arc3,rad=0.2'),
-                bbox=dict(boxstyle='round', facecolor='white',
-                          edgecolor='#2166AC', alpha=0.92))
 
     # Find optimum — green diamond, also distinct
     max_idx = np.unravel_index(np.nanargmax(Zi), Zi.shape)
     opt_a, opt_ns = xi[max_idx[1]], yi[max_idx[0]]
+
+    # Manual contour-label placement: per level pick the contour point that
+    # is farthest from the Default/Optimal annotation anchors and sits below
+    # y = 0.24, so labels clear the panel title and both annotation boxes
+    # (inline auto-placement collided: layout QA text_overlap x3)
+    labeled = [lvl for lvl, segs in zip(cs.levels, cs.allsegs)
+               if any(len(s) > 1 for s in segs)]
+    avoid = [(DEFAULT_ALPHA, DEFAULT_NOISE_STD), (opt_a, opt_ns)]
+    manual = []
+    for lvl in labeled:
+        segs = cs.allsegs[list(cs.levels).index(lvl)]
+        pts = np.concatenate(segs)
+        d = np.minimum.reduce([np.hypot(pts[:, 0] - a0, pts[:, 1] - a1)
+                               for a0, a1 in avoid])
+        for j in np.argsort(-d):
+            if pts[j, 1] < 0.24:
+                manual.append(tuple(pts[j]))
+                break
+        else:
+            manual.append(tuple(pts[np.argmax(d)]))
+    ax.clabel(cs, levels=labeled, manual=manual,
+              fontsize=base_fs - 1, fmt='DDR=%.0f')
+
+    # Default ★ — dark bold marker, distinct from heatmap colours
+    ax.scatter([DEFAULT_ALPHA], [DEFAULT_NOISE_STD], marker='*', s=350,
+               c='#2166AC', edgecolors='white', linewidth=1.0, zorder=10)
+    ax.annotate(f'Default\nα={DEFAULT_ALPHA}, σ={DEFAULT_NOISE_STD}',
+                xy=(DEFAULT_ALPHA, DEFAULT_NOISE_STD),
+                xytext=(DEFAULT_ALPHA + 0.22, DEFAULT_NOISE_STD + 0.22),
+                fontsize=base_fs - 1, fontweight='bold', color='#2166AC',
+                arrowprops=dict(arrowstyle='->', color='#2166AC', lw=0.8,
+                               connectionstyle='arc3,rad=0.2'),
+                bbox=dict(boxstyle='round', facecolor='white',
+                          edgecolor='#2166AC', alpha=0.92))
+
     ax.scatter([opt_a], [opt_ns], marker='D', s=180,
-               c='#1B7837', edgecolors='white', linewidth=1.5, zorder=10)
+               c='#1B7837', edgecolors='white', linewidth=0.8, zorder=10)
     # Place optimum annotation inside plot — offset towards centre to avoid edges
-    opt_dx = 0.22 if opt_a < 0.6 else -0.22
+    # dx=-0.30 (not -0.22): at 8 pt print size the Default and Optimal boxes
+    # collided when both anchored near the left edge (layout QA)
+    opt_dx = 0.22 if opt_a < 0.6 else -0.30
     opt_dy = 0.18 if opt_ns < 0.3 else -0.18
     ax.annotate(f'Optimal\nα={opt_a:.2f}, σ={opt_ns:.2f}\nDDR={Zi[max_idx]:.1f}',
                 xy=(opt_a, opt_ns),
                 xytext=(opt_a + opt_dx, opt_ns + opt_dy),
-                fontsize=base_fs - 3, fontweight='bold', color='#1B7837',
-                arrowprops=dict(arrowstyle='->', color='#1B7837', lw=1.5,
+                fontsize=base_fs - 1, fontweight='bold', color='#1B7837',
+                arrowprops=dict(arrowstyle='->', color='#1B7837', lw=0.8,
                                connectionstyle='arc3,rad=0.2'),
                 bbox=dict(boxstyle='round', facecolor='white',
                           edgecolor='#1B7837', alpha=0.92))
@@ -568,14 +592,14 @@ def _draw_alpha_noise_heatmap(ax, results, base_fs):
     add_colorbar(fig=ax.figure, mappable=cf,
                  label='DDR (Directional Dominance Ratio)',
                  ax=ax, shrink=0.82, aspect=25)
-    ax.set_xlabel(r'ARC Stripping Strength $\alpha$', fontsize=base_fs + 2,
+    ax.set_xlabel(r'ARC Stripping Strength $\alpha$', fontsize=base_fs + 1,
                   fontweight='bold')
     ax.set_ylabel(r'Observational Noise $\sigma_{\mathrm{noise}}$',
-                  fontsize=base_fs + 2, fontweight='bold')
+                  fontsize=base_fs + 1, fontweight='bold')
     ax.set_title(r'DDR Landscape: $\alpha$ vs $\sigma_{\mathrm{noise}}$' +
                  f'\n($N_{{\\mathrm{{perturb}}}}$ = {DEFAULT_N_PERTURB})',
-                 fontweight='bold', fontsize=base_fs + 3, pad=8)
-    add_panel_label(ax, '(b)', x=0.02, y=0.92, fontsize=base_fs + 4)
+                 fontweight='bold', fontsize=base_fs + 2, pad=8)
+    add_panel_label(ax, '(b)', x=0.02, y=0.92, fontsize=base_fs + 2)
 
 
 # Distinct colours for TPR/FPR — NOT red/blue (reserved for methods in panel a)
@@ -611,36 +635,36 @@ def _draw_nperturb_convergence(ax, results, base_fs):
 
     # TPR — left axis, teal (distinct from CARC red)
     ax.errorbar(n_vals, tpr_means, yerr=tpr_stds,
-                color=TPR_COLOR, linewidth=3.0, marker='o',
+                color=TPR_COLOR, linewidth=0.8, marker='o',
                 markersize=11, markerfacecolor='white', markeredgewidth=2.5,
                 capsize=7, capthick=2.0, label='TPR (true direction)', zorder=6)
     ax.fill_between(n_vals, tpr_means - tpr_stds, tpr_means + tpr_stds,
                     color=TPR_COLOR, alpha=0.10, linewidth=0)
-    ax.axhline(0.95, color=TPR_COLOR, linestyle='--', linewidth=2.0,
+    ax.axhline(0.95, color=TPR_COLOR, linestyle='--', linewidth=1.0,
                alpha=0.5)
     ax.set_ylabel('True Positive Rate (TPR)', color=TPR_COLOR,
-                  fontsize=base_fs + 2, fontweight='bold')
+                  fontsize=base_fs + 1, fontweight='bold')
     ax.tick_params(axis='y', labelcolor=TPR_COLOR)
 
     # FPR — right axis, warm brown (distinct from Granger blue)
     ax2 = ax.twinx()
     ax2.errorbar(n_vals, fpr_means, yerr=fpr_stds,
-                 color=FPR_COLOR, linewidth=3.0, marker='s',
+                 color=FPR_COLOR, linewidth=0.8, marker='s',
                  markersize=11, markerfacecolor='white', markeredgewidth=2.5,
                  capsize=7, capthick=2.0, label='FPR (reverse direction)', zorder=5)
     ax2.fill_between(n_vals, np.maximum(0, fpr_means - fpr_stds),
                      fpr_means + fpr_stds,
                      color=FPR_COLOR, alpha=0.10, linewidth=0)
-    ax2.axhline(0.05, color=FPR_COLOR, linestyle='--', linewidth=2.0,
+    ax2.axhline(0.05, color=FPR_COLOR, linestyle='--', linewidth=1.0,
                 alpha=0.5)
     ax2.set_ylabel('False Positive Rate (FPR)', color=FPR_COLOR,
-                   fontsize=base_fs + 2, fontweight='bold')
+                   fontsize=base_fs + 1, fontweight='bold')
     ax2.tick_params(axis='y', labelcolor=FPR_COLOR)
 
     # Stability band annotation — inside plot, lower-right
     ax.axvspan(180, 420, alpha=0.06, color='#1A9641', zorder=0)
     ax.annotate('Stable region\nTPR > 0.95, FPR < 0.05',
-                xy=(380, 0.60), fontsize=base_fs - 3,
+                xy=(380, 0.60), fontsize=base_fs - 1,
                 ha='right', va='bottom', fontweight='bold', color='#1A9641',
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
                           edgecolor='#1A9641', alpha=0.88))
@@ -649,11 +673,11 @@ def _draw_nperturb_convergence(ax, results, base_fs):
     lines1, labels1 = ax.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax.legend(lines1 + lines2, labels1 + labels2,
-              fontsize=base_fs - 2, loc='upper right', framealpha=0.9,
+              fontsize=base_fs - 1, loc='upper right', framealpha=0.9,
               ncol=1, borderpad=0.4, labelspacing=0.3)
 
     ax.set_xlabel(r'Ensemble Size $N_{\mathrm{perturb}}$',
-                  fontsize=base_fs + 2, fontweight='bold')
+                  fontsize=base_fs + 1, fontweight='bold')
     ax.set_xticks(n_vals)
     ax.set_xticklabels([str(int(v)) for v in n_vals])
     ax.set_xlim(min(n_vals) - 25, max(n_vals) + 25)
@@ -662,8 +686,8 @@ def _draw_nperturb_convergence(ax, results, base_fs):
     ax.grid(True, linestyle='dotted', alpha=0.25)
     ax.set_title(r'Convergence: $N_{\mathrm{perturb}}$ Stability' +
                  f'\n(α={DEFAULT_ALPHA}, σ={DEFAULT_NOISE_STD})',
-                 fontweight='bold', fontsize=base_fs + 3, pad=8)
-    add_panel_label(ax, '(c)', x=0.02, y=0.92, fontsize=base_fs + 4)
+                 fontweight='bold', fontsize=base_fs + 2, pad=8)
+    add_panel_label(ax, '(c)', x=0.02, y=0.92, fontsize=base_fs + 2)
 
 
 def _draw_summary_stats(ax, results, base_fs):
@@ -702,8 +726,10 @@ def _draw_summary_stats(ax, results, base_fs):
     best_ddr = best_row(grp_full, 'robustness', True)
 
     # ---- Title (axes fraction) ----
-    ax.text(0.5, 0.97, 'Parameter Recommendation Matrix',
-            ha='center', va='top', fontsize=base_fs + 3,
+    # shorter wording: the full '…Matrix' title spanned the panel and its
+    # left edge ran into the '(d)' panel letter (layout QA)
+    ax.text(0.5, 0.97, 'Parameter Recommendations',
+            ha='center', va='top', fontsize=base_fs + 2,
             fontweight='bold', color='#111111', transform=ax.transAxes)
 
     # ---- Table — wider bbox to prevent left-edge text clipping ----
@@ -730,7 +756,7 @@ def _draw_summary_stats(ax, results, base_fs):
 
     # ---- Style table cells — smaller font to fit ----
     table.auto_set_font_size(False)
-    table.set_fontsize(base_fs - 2)
+    table.set_fontsize(base_fs - 1)
 
     for key, cell in table.get_celld().items():
         row, col = key
@@ -743,12 +769,12 @@ def _draw_summary_stats(ax, results, base_fs):
         elif row == 1:
             cell.set_facecolor('#F0F4F8')
             cell.set_text_props(color='#2166AC', fontweight='bold',
-                               fontsize=base_fs - 2)
+                               fontsize=base_fs - 1)
         elif col == 0 and row >= 2:
             cell.set_text_props(color='#1B7837', fontweight='bold',
-                               fontsize=base_fs - 2)
+                               fontsize=base_fs - 1)
         else:
-            cell.set_text_props(fontsize=base_fs - 2)
+            cell.set_text_props(fontsize=base_fs - 1)
 
     # ---- Key Insights — shorter text, smaller font, below table ----
     ax.text(0.5, 0.20,
@@ -761,10 +787,10 @@ def _draw_summary_stats(ax, results, base_fs):
 
     ax.text(0.5, 0.08,
             '▲ Best combos improve DDR ~20–40%; marginal TPR/FPR trade-off',
-            ha='center', va='center', fontsize=base_fs - 2, fontweight='bold',
+            ha='center', va='center', fontsize=base_fs - 1, fontweight='bold',
             color='#1B7837', transform=ax.transAxes)
 
-    add_panel_label(ax, '(d)', x=0.02, y=0.92, fontsize=base_fs + 4)
+    add_panel_label(ax, '(d)', x=0.02, y=0.92, fontsize=base_fs + 2)
 
 
 def plot_parameter_grid(results, out_dir=None):
@@ -778,13 +804,16 @@ def plot_parameter_grid(results, out_dir=None):
     """
     print("\n>>> Plotting 2×2 mixed-layout validation figure")
 
-    apply_style("paper", font_scale=1.6)
+    apply_style("paper", font_scale=1.0)  # print size: base ~8 pt
     base_fs = plt.rcParams["font.size"]
 
-    fig = plt.figure(figsize=(22, 18))
+    fig = plt.figure(figsize=(7.0, 5.727))  # 178 mm wide, same aspect
     gs = fig.add_gridspec(2, 2, hspace=0.38, wspace=0.30,
                           height_ratios=[1.0, 0.65],  # top row larger — primary results
-                          top=0.91, bottom=0.10, left=0.06, right=0.97)
+                          # top=0.875: the two-line panel-(b) title needs the
+                          # strip above the cells to itself; at 0.91 it rose
+                          # into the suptitle (layout QA)
+                          top=0.875, bottom=0.10, left=0.06, right=0.97)
 
     # ---- Generate method comparison sweep ----
     print("  Computing method comparison sweep...")
@@ -818,17 +847,21 @@ def plot_parameter_grid(results, out_dir=None):
 
     # ---- Title ----
     fig.suptitle('CARC Multi-Parameter Sensitivity & Method Validation',
-                 fontsize=base_fs + 12, fontweight='bold', y=0.975)
+                 fontsize=base_fs + 3, fontweight='bold', y=0.975)
 
     # ---- Caption ----
+    # trimmed to one short pair of sentences: the full three-sentence
+    # caption was wider than the 178 mm canvas and spilled past the left
+    # edge (layout QA); the cache provenance is a run detail, not figure
+    # content
     fig.text(0.50, 0.005,
              f'Semi-synthetic validation with NGRIP-like forcing, {N_REALIZATIONS} realizations. '
-             'All four methods (CARC, Granger, CCM, PCMCI) computed on identical synthetic data. '
-             'Panels (b–d): computed from param_sensitivity_cache.csv.',
-             ha='center', va='bottom', fontsize=base_fs - 4, color='#999999',
+             'All four methods computed on identical synthetic data.',
+             ha='center', va='bottom', fontsize=base_fs - 1, color='#999999',
              style='italic')
 
-    save_figure(fig, "Fig6_MultiParameter_Sensitivity", out_dir)
+    save_figure(fig, "Fig6_MultiParameter_Sensitivity", out_dir,
+                fmts=("pdf", "png", "tif"))
     plt.close()
     print("  → Fig6_MultiParameter_Sensitivity saved")
 
@@ -848,8 +881,8 @@ def _add_legend_strip(fig, hue_colors, title, x, y, width):
                                    markeredgecolor='#555555', markeredgewidth=0.6,
                                    label=str(val)))
     legend_ax.legend(handles=handles, title=title, loc='center',
-                     ncol=len(hue_colors), fontsize=plt.rcParams['font.size'] - 3,
-                     title_fontsize=plt.rcParams['font.size'] - 1,
+                     ncol=len(hue_colors), fontsize=plt.rcParams['font.size'] - 1,
+                     title_fontsize=plt.rcParams['font.size'],
                      frameon=True, edgecolor='#cccccc', framealpha=0.85,
                      handlelength=1.2, handletextpad=0.5)
 

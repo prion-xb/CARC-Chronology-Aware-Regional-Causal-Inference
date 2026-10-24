@@ -25,6 +25,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import patheffects as pe
+from matplotlib.patches import Rectangle
 from scipy.ndimage import gaussian_filter1d
 import warnings
 warnings.filterwarnings('ignore')
@@ -67,6 +68,20 @@ WINDOW_COLORS_LIGHT = {
     4: '#D1E5F0',
     8: '#FDDBC7',
 }
+
+# ============================================================================
+# Axis / grid treatment — matches the reference figure FigS_Stacking_0-800:
+# dark charcoal axis family (#2a2927 frame / #282626 ticks) plus a visible
+# (~60% opacity) thin horizontal grid. The previous #444444 1.4-pt frame
+# washed out at print size; this palette survives 300-dpi downsampling.
+# ============================================================================
+AX_COL       = '#2a2927'   # spines / frame
+AX_TICK_COL  = '#282626'   # tick marks
+AX_LABEL_COL = '#111111'   # axis titles / tick labels
+GRID_COL     = '#3b3e3e'
+GRID_ALPHA   = 0.35   # v11: 0.30→0.35 — hairline grid must stay clearly visible (user could not see the v10 thinning)
+GRID_LW      = 0.3    # v10: hairline grid (user: 网格线不要太粗，细一点) — 0.6pt read thick
+SPINE_LW     = 2.0
 
 # ============================================================================
 # Data loading (reuse pattern from 05_causal_inference_tier1.py)
@@ -202,20 +217,22 @@ def sliding_window_carc(age_grid, signals, pair, proxy_var,
 
 
 # ============================================================================
-# Plotting — Redesigned v4: time-series-integrated layout
+# Plotting — v7 restack: CENOGRID (Westerhold 2020 Fig.1) composition
 # ============================================================================
 
-SMOOTH_SIGMA_TS = 3    # proxy time series smoothing
-SMOOTH_SIGMA_CS = 4    # causality metric smoothing (reduced from 6: less blur)
+SMOOTH_SIGMA_TS = 1    # proxy time series smoothing (Westerhold-level sharpness:
+                       # sigma 1 only clips 50-yr noise spikes, no airbrush)
+SMOOTH_SIGMA_CS = 1    # causality metric smoothing (single thin line, v8)
 
-# Sub-stage category colours — warm (interstadial), hot (Heinrich), cool (stadial)
-# Deliberately distinct from MIS band colours below.
+# Sub-stage category colours — Westerhold-2020-level muted family (v8,
+# user feedback 2026-09-26: the saturated red/orange/blue read as cheap).
+# Low chroma, unified mid lightness = the "premium" look of CENOGRID.
 SUBSTAGE_TYPE_COLORS = {
-    'interstadial': '#D73027',   # warm red
-    'heinrich':     '#E66101',   # vivid orange
-    'stadial':      '#4393C3',   # cool medium-blue
+    'interstadial': '#BD5954',   # muted soft red (extracted from Westerhold)
+    'heinrich':     '#C0925E',   # muted warm ochre
+    'stadial':      '#7A8FB8',   # muted steel blue (extracted from Westerhold)
 }
-SUBSTAGE_BG_ALPHA = 0.16   # slightly more visible
+SUBSTAGE_BG_ALPHA = 0.12   # light: full-width panels keep the shading recessive
 
 SUBSTAGES = [
     (12.7, 14.7, 'B-A',        'interstadial'),
@@ -226,13 +243,17 @@ SUBSTAGES = [
     (47.0, 49.0, 'GS-12',      'stadial'),
 ]
 
-# MIS colours — distinct from sub-stage category colours
-# Warm interglacials in magenta-pink/green; cold glacials in blue/brown
+# MIS stages — v10: mirror the Westerhold state-bar's colour PROPORTIONS
+# (user feedback 2026-09-26: the source Epoch bar reads brown-first; its
+# deep coolhouse blue is only a small sliver at the oldest/left edge).
+# Warm stages = warmhouse tans (brown family dominates, as in the source),
+# cold stages = pale cool blues, deep blue reserved for the narrow
+# left-edge MIS 4 — exactly where the source puts its deep blue.
 MIS_STAGES = [
-    (10.0, 14.0,  'MIS 1', '#C51B7D',  'Term. I'),              # magenta-pink (interglacial)
-    (14.0, 29.0,  'MIS 2', '#2166AC',  'LGM'),                  # deep blue (glacial)
-    (29.0, 57.0,  'MIS 3', '#4DAF4A',  'Interstadial Complex'), # green
-    (57.0, 60.0,  'MIS 4', '#8C510A',  'Early Glacial'),        # brown (glacial)
+    (10.0, 14.0,  'MIS 1', '#CCA480',  'Term. I'),              # warmhouse tan (interglacial)
+    (14.0, 29.0,  'MIS 2', '#8CC6E8',  'LGM'),                  # coolhouse2 pale blue (glacial)
+    (29.0, 57.0,  'MIS 3', '#DBAB70',  'Interstadial Complex'), # warmhouse2 ochre (mild)
+    (57.0, 60.0,  'MIS 4', '#3F74A7',  'Early Glacial'),        # coolhouse deep blue (oldest edge)
 ]
 
 MIS_GLACIAL_COLORS = {
@@ -240,10 +261,10 @@ MIS_GLACIAL_COLORS = {
     'glacial':      '#FDDBC7',  # even MIS = cold
 }
 
-PHASES = [
-    (15.0, 22.0, 'Deglacial\nPhase I'),
-    (37.0, 52.0, 'Interstadial\nPhase II'),
-]
+# v13: phase bands deleted entirely — the event bar above carries the
+# event alignment at the same x's, so the grey bands duplicated it (the
+# last redundancy left over from v12); the phase vocabulary belongs in
+# the caption/text only.
 
 
 
@@ -283,41 +304,37 @@ def _load_proxy_for_plotting(pair, age_grid):
     return {X_name: _load_one(X_name), Y_name: _load_one(Y_name)}
 
 
-def _load_orbital_10_60():
-    """Load orbital forcing for the 10–60 ka window."""
-    import os as _os
-    orb_path = _os.path.join(_os.path.dirname(__file__), '..',
-                             'data', 'orbital', 'La04_800ka.csv')
-    if not _os.path.exists(orb_path):
-        return None
-    orb = pd.read_csv(orb_path)
-    age = orb['age_ka'].values
-    mask = (age >= AGE_START - 1) & (age <= AGE_END + 1)
-    return {
-        'age': age[mask],
-        'ecc': orb['eccentricity'].values[mask],
-        'obl': orb['obliquity_rad'].values[mask] * 180 / np.pi,
-        'pre': np.sin(orb['pibar_rad'].values[mask]),
-    }
-
-
 # ============================================================================
 # Main plot function
 # ============================================================================
 
 def plot_sliding_window(results, pair, out_dir=None):
-    """Fig.7 v5 — Per-W columns: TPR/FPR/DDR stacked vertically within each W.
+    """Fig.7 v7 — Westerhold-2020-style restack (user feedback 2026-09-22).
 
-    Layout:
-      (a) Proxy time series (full width)
-      (b) Orbital forcing (compact)
-      (c-e) W=2,4,8 ka columns — each with TPR/FPR/DDR sub-panels
-      (f) MIS/substage ruler (compact strip)
+    Layout — single column of full-width panels, ONE shared time axis:
+      TOP: a thin UNTITLED stratigraphy band (user feedback 2026-09-22:
+      the geological axis must neither be its own panel nor be folded
+      into panel (a)) — two thin Westerhold GTS colour bars (MIS stages
+      + climate sub-stages, labels inside), the shared ink age axis and
+      the category key row. No panel letter, no title, no frame: it
+      reads as the figure's axis header, not as a panel.
+      (a) Proxy time series — MIS shading ties to the MIS bar above
+      (b) TPR / (c) FPR / (d) DDR — three W series per panel
+
+    Vertically compact (user feedback 2026-09-22): panels kept short,
+    inter-panel gaps tightened (hspace 0.26) and titles pulled in
+    (pad 7).
+
+    v6's 3×3 per-W columns were too crowded at 178 mm print width (user
+    feedback); the W series colours already encode window width, so the
+    columns were redundant. Composition follows Westerhold et al. 2020
+    Fig.1: full-width stacked panels, height proportional to information
+    density, no suptitle — panel letters/titles + caption carry context.
     """
-    print("\n>>> Plotting per-W column sliding-window figure")
+    print("\n>>> Plotting restacked sliding-window figure")
     X_name, Y_name = pair
 
-    apply_style("paper", font_scale=1.6)
+    apply_style("paper", font_scale=1.0)  # print size: base ~8 pt
     base_fs = plt.rcParams["font.size"]
 
     WW = sorted(WINDOW_WIDTHS)
@@ -325,170 +342,170 @@ def plot_sliding_window(results, pair, out_dir=None):
     # ---- Load proxy data ----
     age_grid_full = np.arange(AGE_START, AGE_END + DT, DT)
     proxy_signals = _load_proxy_for_plotting(pair, age_grid_full)
-    orbital = _load_orbital_10_60()
 
-    # ---- Figure grid ----
-    fig = plt.figure(figsize=(27, 20))
+    # ---- Figure grid: GTS band on TOP, panels, age axis at the BOTTOM ----
+    # v15: the shared age axis moves to the figure bottom (user 2026-09-27:
+    # "数轴不在下面" — the age numbers must sit under the whole figure).
+    # Row 0 = stratigraphy band (pure bar, NO axis of its own), rows 1-4 =
+    # panels (a)-(d), row 5 = the single age-axis row (black line +
+    # downward ticks + numbers + unit, Westerhold p2 geomag-bar style).
+    # Black lines are separators: the ink line under the band divides the
+    # GTS bar zone from the curve zone, the bottom axis line closes the
+    # column — Westerhold p4 layout.
+    fig = plt.figure(figsize=(6.93, 6.10))  # 176 mm wide (Science column)
 
-    gs = fig.add_gridspec(4, 1,
-        height_ratios=[1.0, 0.32, 2.8, 0.70],  # taller ruler for clear MIS/event separation
-        hspace=0.18,
-        top=0.958, bottom=0.050, left=0.055, right=0.985)
+    gs = fig.add_gridspec(6, 1,
+        height_ratios=[0.85, 1.40, 0.95, 0.95, 0.95, 0.42],
+        hspace=0.26,
+        top=0.965, bottom=0.05, left=0.085, right=0.985)
 
-    # Panels
-    ax_ts  = fig.add_subplot(gs[0])   # (a) proxy time series
-    ax_orb = fig.add_subplot(gs[1])   # (b) orbital forcing
-    ax_mis = fig.add_subplot(gs[3])   # (f) MIS/substage ruler
+    ax_strip = fig.add_subplot(gs[0])                        # untitled GTS band
+    ax_ts    = fig.add_subplot(gs[1])                        # (a) proxy
+    axs      = [fig.add_subplot(gs[2 + i]) for i in range(3)]  # (b)(c)(d)
+    ax_age   = fig.add_subplot(gs[5])                        # shared age axis
 
-    # ---- Row 2: 3-column W panels, each column has 3 sub-rows ----
-    gs_w = gs[2].subgridspec(3, 3, hspace=0.09, wspace=0.11)
+    # ---- Top: thin untitled stratigraphy band (no panel letter/title) ----
+    _draw_stratigraphy_band(ax_strip, base_fs)
 
-    # ---- (a) Proxy Time Series ----
-    _draw_proxy_timeseries(ax_ts, age_grid_full, proxy_signals, X_name, Y_name, base_fs)
+    # ---- Bottom: the figure's ONE shared age axis (numbers live here) ----
+    _draw_age_axis(ax_age, base_fs)
 
-    # ---- (b) Orbital Forcing ----
-    _draw_orbital_compact(ax_orb, orbital, base_fs)
+    # ---- (a) Proxy Time Series (v13: W legend moved to (b)) ----
+    _draw_proxy_timeseries(ax_ts, age_grid_full, proxy_signals,
+                           X_name, Y_name, base_fs, results)
 
-    # ---- (c–e) Per-W causality columns ----
-    w_labels = ['(c) W = 2 ka', '(d) W = 4 ka', '(e) W = 8 ka']
+    # ---- (b–d) TPR / FPR / DDR — three W series per panel ----
     metric_configs = [
         ('tpr', 'TPR', (-0.05, 1.12), 0.95, '95% threshold'),
         ('fpr', 'FPR', (-0.05, 1.12), 0.05, '5% significance'),
         ('ddr', 'DDR', (-1, 11),     3.0,  'DDR = 3'),
     ]
 
-    for col_idx, (W, wlabel) in enumerate(zip(WW, w_labels)):
-        df_w = results[W]
-        color = WINDOW_COLORS[W]
+    for idx, (metric, ylabel, (ylo, yhi), ref_val, ref_label) in enumerate(
+        metric_configs):
+        ax = axs[idx]
 
-        for row_idx, (metric, ylabel, (ylo, yhi), ref_val, ref_label) in enumerate(
-            metric_configs):
-            ax = fig.add_subplot(gs_w[row_idx, col_idx])
-            is_top = (row_idx == 0)
-            is_bot = (row_idx == 2)
+        # Sub-stage background (paper dictionary colours, light).
+        # The colour blocks are named by the sub-stage bar in the
+        # stratigraphy band above (same x alignment), so no in-panel
+        # labels are needed — in-panel labels sat on the data curves
+        # (occlusion, user feedback).
+        for n_ss, (start, end, _short, category) in enumerate(SUBSTAGES):
+            span = ax.axvspan(start, end, 0, 1,
+                              facecolor=SUBSTAGE_TYPE_COLORS[category],
+                              alpha=SUBSTAGE_BG_ALPHA, zorder=0,
+                              edgecolor='none')
+            span.set_gid(f'layer-shading-sub-{n_ss:02d}')
 
-            # Sub-stage background
-            for start, end, _short, category in SUBSTAGES:
-                ax.axvspan(start, end, 0, 1,
-                           facecolor=SUBSTAGE_TYPE_COLORS[category],
-                           alpha=SUBSTAGE_BG_ALPHA, zorder=0, edgecolor='none')
+        # Data — one thick-smooth / thin-raw pair per window width
+        for W in WW:
+            _draw_single_window_metric(ax, results[W], metric,
+                                       WINDOW_COLORS[W])
 
-            # Draw data (single W — thick smooth, thin raw)
-            _draw_single_window_metric(ax, df_w, metric, color)
+        # Axes — v12: no rotated ylabel; the title line '({letter}) TPR'
+        # already names the metric (the old ylabel repeated it verbatim)
+        ax.set_ylim(ylo, yhi)
+        ax.set_xlim(AGE_END, AGE_START)
+        # v11: every-5-ka x ticks anchor the VERTICAL grid lines but stay
+        # invisible themselves — the band above still carries the shared
+        # age axis (grid only draws where ticks exist, so set_xticks([])
+        # had silently killed the vertical grid).
+        ax.set_xticks(np.arange(AGE_START, AGE_END + 0.01, 5.0))
+        ax.tick_params(axis='x', which='major', labelbottom=False, length=0)
 
-            # Axes
-            ax.set_ylabel(ylabel, fontsize=base_fs + 1, fontweight='bold',
-                          color='#222222', labelpad=6)
-            ax.set_ylim(ylo, yhi)
-            ax.set_xlim(AGE_END, AGE_START)
-
-            # Reference line
-            if metric == 'ddr':
-                ax.axhline(ref_val, color='#333333', linestyle='--',
-                          linewidth=1.6, alpha=0.55)
-                ax.axhline(1.0, color='#999999', linestyle=':',
-                          linewidth=1.0, alpha=0.35)
-            else:
-                ax.axhline(ref_val, color='#333333', linestyle='--',
-                          linewidth=1.6, alpha=0.55)
-
-            # Grid
-            ax.grid(True, which='major', linestyle='solid', alpha=0.22,
-                    linewidth=0.6, color='#999999')
-            ax.grid(True, which='minor', linestyle='dotted', alpha=0.10,
-                    linewidth=0.4, color='#BBBBBB')
-            from matplotlib.ticker import AutoMinorLocator
-            ax.yaxis.set_minor_locator(AutoMinorLocator(4))
-            ax.xaxis.set_minor_locator(AutoMinorLocator(5))
-
-            # Spines
-            for spine in ax.spines.values():
-                spine.set_visible(False)
-            ax.spines['left'].set_visible(True)
-            ax.spines['left'].set_linewidth(1.4)
-            ax.spines['left'].set_color('#444444')
-            ax.tick_params(axis='y', which='major', direction='out',
-                           length=4, width=1.0, colors='#333333')
-
-            # X-axis ticks (bottom row only)
-            if is_bot:
-                ax.spines['bottom'].set_visible(True)
-                ax.spines['bottom'].set_linewidth(1.6)
-                ax.spines['bottom'].set_color('#444444')
-                ax.set_xticks(np.arange(AGE_START, AGE_END + 0.01, 10))
-                ax.tick_params(axis='x', which='major', direction='out',
-                               length=6, width=1.3, colors='#333333',
-                               labelsize=base_fs)
-                ax.set_xticks(np.arange(AGE_START, AGE_END + 0.01, 5), minor=True)
-                ax.tick_params(axis='x', which='minor', direction='out',
-                               length=3, width=0.6, colors='#888888')
-                ax.set_xlabel('Age (ka BP)', fontsize=base_fs + 1,
-                              fontweight='bold', color='#111111', labelpad=8)
-            else:
-                ax.tick_params(labelbottom=False)
-
-            # Column title on top sub-panel
-            if is_top:
-                ax.set_title(wlabel, fontweight='heavy', fontsize=base_fs + 3,
-                             color=color, pad=8)
-
-            # Phase blocks on TPR panel
+        # Reference line(s) — left end, white halo label
+        if metric == 'ddr':
+            ref1 = ax.axhline(ref_val, color='#333333', linestyle='--',
+                              linewidth=1.0, alpha=0.55)
+            ref1.set_gid('layer-ref-main')
+            ref2 = ax.axhline(1.0, color='#999999', linestyle=':',
+                              linewidth=1.0, alpha=0.35)
+            ref2.set_gid('layer-ref-unit')
+            lbl_y, lbl_va = ref_val + 0.25, 'bottom'
+            # unit-skill line (DDR = 1) gets a muted companion label
+            unit_lbl = ax.text(AGE_END - 1.2, 1.0 - 0.15, 'DDR = 1',
+                               ha='left', va='top',
+                               fontsize=base_fs - 1, color='#777777',
+                               bbox=dict(boxstyle='round,pad=0.22',
+                                         facecolor='white', edgecolor='none',
+                                         alpha=0.75), zorder=25)
+            unit_lbl.set_gid('layer-ref-label')
+        else:
+            ref = ax.axhline(ref_val, color='#333333', linestyle='--',
+                             linewidth=1.0, alpha=0.55)
+            ref.set_gid('layer-ref-main')
+            # v13: TPR label hugs its dashed line (the phase bands are
+            # gone — nothing occupies the strip under the 95% line, so
+            # the old 0.14-below placement stranded the label far from
+            # the line it names)
             if metric == 'tpr':
-                for x0, x1, label in PHASES:
-                    _add_phase_block(ax, x0, x1,
-                                     y_lo=0.78, y_hi=0.99,
-                                     label=label, n_fade=12)
+                lbl_y, lbl_va = ref_val - 0.02, 'top'
+            else:
+                lbl_y, lbl_va = ref_val + 0.06, 'bottom'
+        ref_lbl = ax.text(AGE_END - 1.2, lbl_y, ref_label,
+                          ha='left', va=lbl_va, fontsize=base_fs - 1,
+                          color='#333333',
+                          bbox=dict(boxstyle='round,pad=0.28',
+                                    facecolor='white', edgecolor='none',
+                                    alpha=0.85), zorder=25)
+        ref_lbl.set_gid('layer-ref-label')
 
-            # ---- Stats summary (DDR panel, bottom of each column) ----
-            if is_bot:
-                tpr_v = df_w['tpr'].dropna()
-                fpr_v = df_w['fpr'].dropna()
-                ddr_v = df_w['ddr'].dropna()
-                ddr_v = ddr_v[ddr_v < 20]
-                honest = (tpr_v >= 0.95).mean()
+        # Grid — v11: full hairline grid, both directions (user: the
+        # vertical lines were missing, only horizontal ones drawn)
+        ax.grid(True, which='major', axis='both', linestyle='solid',
+                alpha=GRID_ALPHA, linewidth=GRID_LW, color=GRID_COL)
+        from matplotlib.ticker import AutoMinorLocator
+        ax.yaxis.set_minor_locator(AutoMinorLocator(4))
 
-                # Compact one-line stats — avoids the dense multi-line box
-                stat_str = (f'μ TPR={tpr_v.mean():.2f}  '
-                           f'FPR={fpr_v.mean():.2f}  '
-                           f'DDR={ddr_v.mean():.1f}  '
-                           f'honest={honest:.0%}')
-                ax.text(0.98, 0.96, stat_str, transform=ax.transAxes,
-                        fontsize=base_fs - 3, family='monospace',
-                        va='top', ha='right', color=color,
-                        bbox=dict(boxstyle='round,pad=0.35',
-                                  facecolor='white',
-                                  edgecolor=color,
-                                  alpha=0.90, linewidth=1.2),
-                        zorder=30)
+        # Spines — dark charcoal, print-visible thickness
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+        ax.spines['left'].set_visible(True)
+        ax.spines['left'].set_linewidth(SPINE_LW)
+        ax.spines['left'].set_color(AX_COL)
+        ax.tick_params(axis='y', which='major', direction='out',
+                       length=4, width=1.5, colors=AX_TICK_COL)
 
-                # Data-driven annotations
-                _add_column_annotations(ax, df_w, color, base_fs)
+        # Panel letter + metric title (no suptitle — CENOGRID keeps panels bare)
+        ax.set_title(f'({chr(98 + idx)}) {ylabel}', loc='left',
+                     fontweight='bold', fontsize=base_fs + 1,
+                     color='#111111', pad=7)
 
-    # ---- (f) MIS/Substage compact ruler ----
-    _draw_mis_substage_ruler(ax_mis, base_fs)
+        # v13: W legend lives HERE (panel b, top-right) — the window
+        # colours only appear in the metric panels, so the old placement
+        # in (a) sat in a panel where nothing was window-coloured
+        # (misleading). The v12 grey phase bands are gone too: the event
+        # bar directly above, at the same x's, already carries the event
+        # alignment, and the bands were the figure's last unexplained
+        # boxes — with them away the top of (b) is free for this legend.
+        if metric == 'tpr':
+            handles = [plt.Line2D([], [], color=WINDOW_COLORS[W],
+                                  linewidth=1.5, solid_capstyle='round',
+                                  label=f'W = {W} ka')
+                       for W in WW]
+            ax.legend(handles=handles, loc='upper right',
+                      fontsize=base_fs - 1, frameon=True,
+                      framealpha=0.85, borderaxespad=0.35,
+                      handlelength=1.5)
 
-    # ---- Window-width comparison legend ----
-    legend_ax = fig.add_axes([0.18, 0.032, 0.64, 0.020])
-    legend_ax.set_xticks([]); legend_ax.set_yticks([])
-    for spine in legend_ax.spines.values():
-        spine.set_visible(False)
-    legend_elements = []
-    for W in WW:
-        legend_elements.append(
-            plt.Line2D([0], [0], color=WINDOW_COLORS[W], linewidth=4.0,
-                       solid_capstyle='round',
-                       label=f'W = {W} ka  (honest = {(results[W]["tpr"].dropna() >= 0.95).mean():.0%})')
-        )
-    legend_ax.legend(handles=legend_elements, loc='center', ncol=3,
-                     fontsize=base_fs - 2, frameon=True,
-                     edgecolor='#CCCCCC', framealpha=0.9)
+        # v12: no per-panel 'mean (W=2/4/8)' stats strings — three ~30-char
+        # haloed lines floating over the upper-right curve area; the curve
+        # levels already show the means graphically and the numbers belong
+        # in the text/table (easily restored if reviewers want them).
 
-    # ---- Title ----
-    fig.suptitle(f'Sliding-Window CARC Causality:  {X_name} → {Y_name}  '
-                 f'(10–60 ka BP, ARC α={CARC_ALPHA})',
-                 fontsize=base_fs + 7, fontweight='bold', y=0.992, color='#111111')
+        # DDR peak annotation — the single most prominent peak
+        if metric == 'ddr':
+            _add_ddr_annotation(ax, results, base_fs)
 
-    save_figure(fig, "Fig7_SlidingWindow_CARC", out_dir)
+    # semantic SVG layers for the Adobe Illustrator workflow — see AI_EDITING.md
+    fig._svg_layer_order = ('frame', 'background', 'shading', 'ref',
+                            'data', 'phase', 'markers', 'text',
+                            'stats', 'annotations', 'legend')
+
+    # SVG with editable text (svg.fonttype "none") for the Inkscape/AI workflow
+    plt.rcParams["svg.fonttype"] = "none"
+    save_figure(fig, "Fig7_SlidingWindow_CARC", out_dir,
+                fmts=("pdf", "png", "tif", "svg"))
     plt.close()
     print("  → Fig7_SlidingWindow_CARC saved")
 
@@ -500,8 +517,9 @@ def plot_sliding_window(results, pair, out_dir=None):
 def _draw_single_window_metric(ax, df, col, color):
     """Draw ONE window width on ONE axis.
 
-    Key visual rule: smoothed line is HEAVIER (thick, opaque) than raw line
-    (thin, semi-transparent). The smoothed trend is what the reader focuses on.
+    v8: ONE thin full-opacity line (σ=1) — the thick-smooth + thin-raw
+    double stack blurred the panel; a single hairline reads sharper
+    (Westerhold-style), and the three W series still separate by colour.
     """
     time = df['time'].values
     raw = df[col].values.copy()
@@ -518,15 +536,9 @@ def _draw_single_window_metric(ax, df, col, color):
         smooth = raw.copy()
 
     if col == 'ddr':
-        raw = np.clip(raw, 0, 10)
         smooth = np.clip(smooth, 0, 10)
 
-    # 1. Raw detail: THIN, SEMI-TRANSPARENT, behind
-    ax.plot(time, raw, color=color, linewidth=1.0, alpha=0.38,
-            zorder=2, solid_capstyle='round')
-
-    # 2. Smoothed trend: THICK, OPAQUE, on top — visually dominant
-    ax.plot(time, smooth, color=color, linewidth=5.5, alpha=0.92,
+    ax.plot(time, smooth, color=color, linewidth=0.8, alpha=1.0,
             zorder=4, solid_capstyle='round')
 
 
@@ -534,54 +546,66 @@ def _draw_single_window_metric(ax, df, col, color):
 # Column-level annotations
 # ============================================================================
 
-def _add_column_annotations(ax_ddr, df, color, base_fs):
-    """Data-driven leader-line annotations for one W column's DDR panel.
+def _add_ddr_annotation(ax_ddr, results, base_fs):
+    """Single leader-line annotation: the most prominent DDR peak overall.
 
-    Peak label is placed to avoid the stats line at the top-right corner.
+    v6 annotated one peak per W column; with all three W series in one
+    panel only the global maximum is labelled, so the panel stays clean.
     """
-    time = df['time'].values
-    ddr_f = np.nan_to_num(df['ddr'].values, nan=0.0)
-    ddr_c = np.clip(ddr_f, 0, 10)
+    best = None  # (time, value, W)
+    for W in sorted(results):
+        ddr_c = np.clip(np.nan_to_num(results[W]['ddr'].values, nan=0.0),
+                        0, 10)
+        peak = ddr_c > 5.0
+        if peak.sum() < 3:
+            continue
+        i = int(np.argmax(ddr_c * peak))
+        if best is None or ddr_c[i] > best[1]:
+            best = (results[W]['time'].values[i], ddr_c[i], W)
+    if best is None or not (12 < best[0] < 56):
+        return
+    tp, vp, W = best
+    color = WINDOW_COLORS[W]
+    # Label to the LEFT by default (clear of the stats line at top-right)
+    ann_x = tp - 7
+    if ann_x < AGE_START + 3:
+        ann_x = tp + 7
+    ann_y_peak = min(vp, 8.5)
+    ann_y_text = max(ann_y_peak - 3.5, 1.0)
+    ann = ax_ddr.annotate(f'DDR = {vp:.1f} (W = {W} ka)',
+                          xy=(tp, ann_y_peak),
+                          xytext=(ann_x, ann_y_text),
+                          fontsize=base_fs - 1, fontweight='heavy',
+                          color=color, ha='center', va='center',
+                          arrowprops=dict(arrowstyle='-', color=color,
+                                          lw=0.8),
+                          zorder=30,
+                          bbox=dict(boxstyle='round,pad=0.3',
+                                    facecolor='white',
+                                    edgecolor=color, alpha=0.88,
+                                    linewidth=0.8))
+    ann.set_gid('layer-stats-ann')
 
-    # DDR peak — only annotate if clearly above noise
-    peak = ddr_c > 5.0
-    if peak.sum() > 3:
-        pt, pv = time[peak], ddr_c[peak]
-        idx = np.nanargmax(pv)
-        tp, vp = pt[idx], pv[idx]
-        if 12 < tp < 56:
-            # Place annotation to the LEFT by default (avoids stats at top-right)
-            ann_x = tp - 6
-            if ann_x < AGE_START + 3:
-                ann_x = tp + 6
-            ann_y_peak = min(vp, 8.5)
-            # Drop text well below peak to avoid crowding the top
-            ann_y_text = max(ann_y_peak - 3.5, 1.0)
-            ax_ddr.annotate(f'DDR = {vp:.1f}',
-                            xy=(tp, ann_y_peak),
-                            xytext=(ann_x, ann_y_text),
-                            fontsize=base_fs - 5, fontweight='heavy',
-                            color=color, ha='center', va='center',
-                            arrowprops=dict(arrowstyle='-', color=color, lw=1.5),
-                            zorder=30,
-                            bbox=dict(boxstyle='round,pad=0.3',
-                                      facecolor='white',
-                                      edgecolor=color, alpha=0.88,
-                                      linewidth=1.2))
+def _draw_proxy_timeseries(ax, age_grid, signals, X_name, Y_name, base_fs,
+                           results=None):
+    """Panel (a): proxy time series with MIS shading (compact, no header).
 
-def _draw_proxy_timeseries(ax, age_grid, signals, X_name, Y_name, base_fs):
-    """Draw NGRIP and target proxy time series with MIS shading."""
-    # MIS glacial/interglacial shading
-    mis_windows_10_60 = [
-        ("1", 10.0, 14.0), ("2", 14.0, 29.0),
-        ("3", 29.0, 57.0), ("4", 57.0, 60.0),
-    ]
-    for name, s, e in mis_windows_10_60:
-        mis_num = int(name)
-        bg = MIS_GLACIAL_COLORS['interglacial'] if mis_num % 2 == 1 else MIS_GLACIAL_COLORS['glacial']
-        ax.axvspan(s, e, facecolor=bg, alpha=0.35, zorder=0, edgecolor='none')
+    The stratigraphy band above this panel carries the shared age axis,
+    so this panel has no time axis of its own. `results` (optional) adds
+    the window-width legend (top-right).
+    """
+    # MIS shading — v9: α0.10 tints of the SAME Westerhold stage colours
+    # used by the MIS bar above (restores the bar↔panel colour tie that
+    # the v8 monochrome strip broke; the tints stay subtle so the curves
+    # keep the visual foreground).
+    for x0, x1, _label, color, _desc in MIS_STAGES:
+        span = ax.axvspan(x0, x1, facecolor=color, alpha=0.10,
+                          zorder=0, edgecolor='none')
+        span.set_gid(f'layer-shading-mis-{x0:.0f}-{x1:.0f}')
 
-    ax.axhline(0, color='#999999', linewidth=0.8, linestyle=':', alpha=0.5, zorder=1)
+    # No separate zero line — the horizontal grid line at y = 0 (major
+    # tick) already marks the zero reference; the old dotted axhline sat
+    # underneath it and only produced a faint ripple on the grid line.
 
     # Plot each proxy
     signal_colors = {
@@ -592,318 +616,229 @@ def _draw_proxy_timeseries(ax, age_grid, signals, X_name, Y_name, base_fs):
         'Cariaco': CARC_COLORS['teal'],
         'Cheng2016': CARC_COLORS['purple'],
     }
+    # v9: journal notation via Unicode (δ, superscripts) — NOT mathtext:
+    # mathtext turns glyphs into vector paths and the exported SVG text
+    # stops being editable in Illustrator (breaks the AI-editing
+    # workflow). Unicode glyphs are real font text, Arial ships them all.
+    SIGNAL_DISPLAY = {
+        'NGRIP': 'NGRIP δ¹⁸O',
+        'EDC_dD': 'EDC δD',
+        'EDC_CO2': 'EDC CO₂',
+        'EDC_CH4': 'EDC CH₄',
+    }
 
+    # v8: ONE thin full-opacity line per proxy (σ=1 kills only the 50-yr
+    # noise spikes). The old 2.2pt-smooth + 0.6pt-raw stack read as an
+    # airbrushed double edge — the Westerhold figure's sharpness comes
+    # from single hairlines at full data frequency.
     for name, color in signal_colors.items():
         if name in signals and signals[name] is not None:
             sig = signals[name]
             smooth = gaussian_filter1d(sig, sigma=SMOOTH_SIGMA_TS)
-            ax.plot(age_grid, sig, color=color, linewidth=0.6, alpha=0.35, zorder=2)
-            ax.plot(age_grid, smooth, color=color, linewidth=2.2, alpha=0.92,
-                    label=name, zorder=3)
+            ax.plot(age_grid, smooth, color=color, linewidth=0.8, alpha=1.0,
+                    label=SIGNAL_DISPLAY.get(name, name), zorder=3)
 
     ax.set_ylabel('Standardized\nProxy Value', fontsize=base_fs + 1,
-                  fontweight='bold', color='#222222', labelpad=6)
+                  fontweight='bold', color=AX_LABEL_COL, labelpad=6)
     ax.set_ylim(-3.5, 3.5)
     ax.set_xlim(AGE_END, AGE_START)
 
     # Legend
-    ax.legend(fontsize=base_fs, loc='upper left', framealpha=0.85, ncol=2)
+    leg_proxy = ax.legend(fontsize=base_fs, loc='upper left',
+                          framealpha=0.85, ncol=2)
 
-    # MIS labels on top
-    for name, s, e in mis_windows_10_60:
-        mid = (s + e) / 2
-        ax.text(mid, 3.25, f'MIS {name}', fontsize=base_fs - 3,
-                color='#666666', ha='center', va='bottom',
-                fontstyle='italic', zorder=5)
+    # No in-panel MIS labels — the band's MIS bar above names the stages
+    # (the old labels collided with both legends and sat on the curves).
 
-    # Styling
-    ax.grid(True, alpha=0.12, linestyle='dotted')
-    ax.tick_params(labelbottom=False)
+    # v13: no W legend in (a) — its curves are proxy-coloured and never
+    # use WINDOW_COLORS, so the legend sat in the one panel where nothing
+    # was window-coloured (misleading). It moved to (b), top-right, where
+    # the window-coloured curves actually live.
+
+    # Styling — same dark-charcoal axis + visible grid treatment as (b–d)
+    # v11: full hairline grid, both directions (vertical lines restored)
+    ax.grid(True, which='major', axis='both', linestyle='solid',
+            alpha=GRID_ALPHA, linewidth=GRID_LW, color=GRID_COL)
     for spine in ax.spines.values():
         spine.set_visible(False)
     ax.spines['left'].set_visible(True)
-    ax.spines['left'].set_linewidth(1.5)
-    ax.spines['left'].set_color('#444444')
+    ax.spines['left'].set_linewidth(SPINE_LW)
+    ax.spines['left'].set_color(AX_COL)
     ax.tick_params(axis='y', which='major', direction='out',
-                   length=5, width=1.2, colors='#333333')
+                   length=5, width=1.5, colors=AX_TICK_COL)
 
-    title_str = f'(a) Proxy Records: {X_name} & {Y_name}  (10–60 ka BP)'
-    ax.set_title(title_str, fontweight='bold', fontsize=base_fs + 2,
-                 loc='left', pad=6)
+    # No time axis of its own — the stratigraphy band above carries the
+    # figure's single shared age axis; the panel keeps a bare top frame
+    # line and its title sits directly below it
+    ax.spines['top'].set_visible(True)
+    ax.spines['top'].set_linewidth(SPINE_LW)
+    ax.spines['top'].set_color(AX_COL)
+    # v11: every-5-ka x ticks anchor the vertical grid (labels stay hidden)
+    ax.set_xticks(np.arange(AGE_START, AGE_END + 0.01, 5.0))
+    ax.tick_params(axis='x', which='major', labelbottom=False, length=0)
 
-
-# ============================================================================
-# Panel (b): Orbital Forcing (compact)
-# ============================================================================
-
-def _draw_orbital_compact(ax, orbital, base_fs):
-    """Compact orbital forcing panel — eccentricity + obliquity."""
-    if orbital is None:
-        ax.text(0.5, 0.5, 'Orbital data not available', ha='center', va='center',
-                fontsize=base_fs, color='#999999', transform=ax.transAxes)
-        ax.set_ylabel('Orbital\nForcing', fontsize=base_fs + 1, fontweight='bold')
-        return
-
-    age = orbital['age']
-    ecc = orbital['ecc']
-    obl = orbital['obl']
-    obl_smooth = gaussian_filter1d(obl, sigma=3)
-
-    # Eccentricity (fill + line)
-    ax.fill_between(age, 0, ecc, color=CARC_COLORS['blue'], alpha=0.22, linewidth=0)
-    ax.plot(age, ecc, color=CARC_COLORS['blue'], linewidth=1.8, alpha=0.85,
-            label='Eccentricity')
-    ecc_smooth = gaussian_filter1d(ecc, sigma=5)
-    ax.plot(age, ecc_smooth, color=CARC_COLORS['navy'], linewidth=2.2, alpha=0.85)
-
-    ax.set_ylabel('Eccentricity', color=CARC_COLORS['blue'], fontsize=base_fs - 1,
-                  fontweight='bold')
-    ax.tick_params(axis='y', labelcolor=CARC_COLORS['blue'], labelsize=base_fs - 3)
-
-    # Obliquity on twin axis
-    ax2 = ax.twinx()
-    ax2.plot(age, obl_smooth, color=CARC_COLORS['red'], linewidth=2.0, alpha=0.80,
-             label='Obliquity')
-    ax2.set_ylabel('Obliquity (°)', color=CARC_COLORS['red'], fontsize=base_fs - 1,
-                   fontweight='bold')
-    ax2.tick_params(axis='y', labelcolor=CARC_COLORS['red'], labelsize=base_fs - 3)
-
-    ax.set_xlim(AGE_END, AGE_START)
-    ax.tick_params(labelbottom=False)
-
-    # Styling
-    for spine in ax.spines.values():
-        spine.set_visible(False)
-    ax.spines['left'].set_visible(True)
-    ax.spines['left'].set_linewidth(1.2)
-    ax.spines['left'].set_color(CARC_COLORS['blue'])
-    ax.tick_params(axis='y', which='major', direction='out', length=4)
-
-    ax.grid(True, alpha=0.10, linestyle='dotted')
-
-    # Legend
-    from matplotlib.lines import Line2D
-    orb_lines = [
-        Line2D([0], [0], color=CARC_COLORS['blue'], linewidth=1.8, label='Eccentricity'),
-        Line2D([0], [0], color=CARC_COLORS['red'], linewidth=2.0, label='Obliquity (sm.)'),
-    ]
-    ax.legend(handles=orb_lines, loc='upper right', fontsize=base_fs - 4,
-             framealpha=0.7, ncol=2)
-
-    ax.set_title('(b) Orbital Forcing  (Laskar et al. 2004)',
-                 fontweight='bold', fontsize=base_fs, loc='left', pad=4)
+    # v12: short title — the legend right below already names the two
+    # proxies and the band above carries the shared 10–60 ka age axis;
+    # the old ~50-char title repeated both verbatim.
+    ax.set_title('(a) Proxy Records', fontweight='bold', fontsize=base_fs + 1,
+                 loc='left', pad=7)
 
 
 # ============================================================================
-# Panel (f): MIS/Substage Combined Ruler
+# Stratigraphy band — thin UNTITLED row at the figure top, not a panel
 # ============================================================================
 
-def _draw_mis_substage_ruler(ax, base_fs):
-    """Combined MIS + substage ruler — MIS on top, climate events below.
+def _draw_stratigraphy_band(ax, base_fs):
+    """Thin untitled stratigraphy band at the top of the figure —
+    Westerhold 2020 Fig. 1 GTS-bar style (user feedback 2026-09-22:
+    the geological axis must neither be its own panel nor be folded
+    into panel (a); it reads as the figure's axis header).
 
-    Layout (top to bottom):
-      - MIS stage bands (4→3→2→1, oldest→youngest left→right)
-      - Age tick marks with "Age (ka BP)" label
-      - Climate event bands (GS-12, GI-12, H4, LGM, H1, B-A)
-      - Three category strips (Interstadial / Heinrich / Stadial) as legend
+    Drawn in absolute data-y in its own short axes (v15: ylim -2.0..4.8,
+    x inverted 60→10), no panel letter, no title, no frame, NO axis:
+      - MIS stage bar — v10: per-stage fills in the Westerhold Epoch-bar
+        state palette with the source's PROPORTIONS (brown family
+        dominant; deep blue only as the narrow oldest-edge sliver),
+        α=1 solid, ink labels inside
+      - climate sub-stages bar (muted Westerhold-level category colours,
+        6.5 pt ink labels inside; 6.5 pt keeps the narrow GI-12/GS-12
+        pair from touching)
+      - category key (solid colour patch + ink name per category)
+      - v15: bottom-edge ink separator line — black lines are SEPARATORS
+        ("黑色直线是用来分割"); the age axis itself (line + ticks +
+        numbers + 'Age (ka BP)') moved to the figure BOTTOM, see
+        _draw_age_axis
+    The CENOGRID geological bar is ONE thin strip of solid colour with
+    labels inside — not a tall stack of shaded rows, leaders and
+    floating labels.
     """
+    ink = '#24201F'   # Westerhold ink (not pure black)
+
+    y_lo, y_hi = -2.0, 4.8   # v15: key row + separator strip only — the
+                             # axis/ticks/labels moved to the figure bottom
+    y_span = y_hi - y_lo
     ax.set_xlim(AGE_END, AGE_START)
-    ax.set_ylim(-0.55, 1.05)
+    ax.set_ylim(y_lo, y_hi)
 
-    N_GRAD = 8  # number of gradient strips per edge
-
-    # ====================================================================
-    # Helper: draw a band with gradient-faded left & right edges
-    # ====================================================================
-    def _gradient_band(x0, x1, y_lo, y_hi, color, fade_frac=0.08, alpha_main=0.85):
-        """Draw a horizontal band whose left & right edges fade to transparent."""
-        w = x1 - x0
-        fade_w = w * fade_frac
-        # Main solid body
-        ax.axvspan(x0 + fade_w, x1 - fade_w, y_lo, y_hi,
-                   facecolor=color, alpha=alpha_main, zorder=2, edgecolor='none')
-        # Left fade
-        for i in range(N_GRAD):
-            frac = (i + 0.5) / N_GRAD
-            a = alpha_main * (np.sin(frac * np.pi / 2) ** 2)
-            a0 = x0 + (i / N_GRAD) * fade_w
-            a1 = x0 + ((i + 1) / N_GRAD) * fade_w
-            if a1 > a0:
-                ax.axvspan(a0, a1, y_lo, y_hi,
-                           facecolor=color, alpha=a, zorder=2, edgecolor='none')
-        # Right fade
-        for i in range(N_GRAD):
-            frac = (i + 0.5) / N_GRAD
-            a = alpha_main * (np.cos(frac * np.pi / 2) ** 2)
-            a0 = x1 - fade_w + (i / N_GRAD) * fade_w
-            a1 = x1 - fade_w + ((i + 1) / N_GRAD) * fade_w
-            if a1 > a0:
-                ax.axvspan(a0, a1, y_lo, y_hi,
-                           facecolor=color, alpha=a, zorder=2, edgecolor='none')
-
-    # ====================================================================
-    # 1. MIS bands (top: y=0.55–0.94) — MIS 4→3→2→1 left→right
-    # ====================================================================
+    # 1. MIS bar — v10: one solid fill per stage mirroring the source
+    #    Epoch bar's proportions (browns first, deep blue only at the
+    #    oldest edge), ink stage labels inside.
+    #    axvspan's ymin/ymax are *axes fractions* (0–1), so convert.
+    frac_mis = ((3.0 - y_lo) / y_span, (4.6 - y_lo) / y_span)
     for x0, x1, label, color, _desc in MIS_STAGES:
-        _gradient_band(x0, x1, 0.55, 0.94, color, alpha_main=0.88)
-        mid = (x0 + x1) / 2
-        w = x1 - x0
-        fs_label = base_fs if w > 8 else base_fs - 2
-        ax.text(mid, 0.745, label, ha='center', va='center',
-                fontsize=fs_label, fontweight='heavy', color='white', zorder=4,
-                path_effects=[pe.withStroke(linewidth=1.2, foreground='black')])
-    # "MIS" label — right edge, inside MIS band
-    ax.text(AGE_END + 2.5, 0.745, 'MIS', ha='right', va='center',
-            fontsize=base_fs, fontweight='heavy', color='white', zorder=5,
-            clip_on=False,
-            path_effects=[pe.withStroke(linewidth=1.5, foreground='#333333')])
+        ax.axvspan(x0, x1, *frac_mis, facecolor=color, alpha=1.0,
+                   zorder=2, edgecolor='none')
+        ax.text((x0 + x1) / 2, 3.8, label, ha='center', va='center',
+                fontsize=base_fs, fontweight='bold', color=ink, zorder=4)
 
-    # ====================================================================
-    # 2. Age tick marks (y=0.49–0.54) — thin strip, tight between MIS and events
-    # ====================================================================
-    # Dark gray horizontal axis line at base of age ruler
-    ax.axhline(0.49, color='#555555', linewidth=1.8, alpha=0.85,
-               zorder=5, clip_on=False)
-    for ta in np.arange(AGE_START, AGE_END + 0.01, 5):
-        ax.plot([ta, ta], [0.49, 0.54], color='#222222', linewidth=1.8,
-                solid_capstyle='butt', zorder=5, clip_on=False)
-        ax.text(ta, 0.545, f'{ta:.0f}', ha='center', va='bottom',
-                fontsize=base_fs - 1, fontweight='bold', color='#111111',
-                zorder=5, clip_on=False)
-    for ta in np.arange(AGE_START, AGE_END + 0.01, 1):
-        if ta % 5 != 0:
-            ax.plot([ta, ta], [0.49, 0.52], color='#888888', linewidth=0.5,
-                    solid_capstyle='butt', zorder=4, clip_on=False)
-    # "Age (ka BP)" label — right edge
-    ax.text(AGE_END + 2.5, 0.515, 'Age\n(ka BP)', ha='right', va='center',
-            fontsize=base_fs - 1, fontweight='bold', color='#111111',
-            zorder=5, clip_on=False)
-
-    # ====================================================================
-    # 3. Climate Event bands (y=0.14–0.48) — tight against age ruler above
-    # ====================================================================
+    # 2. Climate sub-stages bar — one thin row, every segment labelled
+    #    inside (6.5 pt keeps the narrow GI-12/GS-12 pair from touching).
+    #    H1 is drawn after B-A and covers their 14–14.7 ka overlap, as in
+    #    the previous version (near-solid α keeps the overlap blend
+    #    visible — data honesty). No path effects: matplotlib's SVG
+    #    backend drops texts that carry them (they stop being editable).
+    frac_ev = ((1.2 - y_lo) / y_span, (2.8 - y_lo) / y_span)
     for start, end, short, category in SUBSTAGES:
         color = SUBSTAGE_TYPE_COLORS[category]
-        # Use reduced fade for narrow bands so text stays inside solid colour
-        w = end - start
-        fade_frac = 0.04 if w < 3.0 else 0.08
-        _gradient_band(start, end, 0.14, 0.48, color, fade_frac, alpha_main=0.85)
-        mid = (start + end) / 2
-        if w >= 2.5:
-            ax.text(mid, 0.31, short, ha='center', va='center',
-                    fontsize=base_fs - 1, fontweight='heavy', color='white', zorder=4,
-                    path_effects=[pe.withStroke(linewidth=1.0, foreground='#333333')])
-        elif w >= 1.0:
-            ax.text(mid, 0.31, short, ha='center', va='center',
-                    fontsize=base_fs - 2, fontweight='heavy', color='white', zorder=4,
-                    path_effects=[pe.withStroke(linewidth=1.0, foreground='#333333')])
-    # "Climate Events" label — placed in blank gap at right edge (x=11, below MIS 1)
-    ax.text(11.5, 0.31, 'Climate\nEvents', ha='center', va='center',
-            fontsize=base_fs - 1, fontweight='bold', fontstyle='italic',
-            color='#333333', zorder=5, clip_on=False)
+        ax.axvspan(start, end, *frac_ev, facecolor=color, alpha=0.85,
+                   zorder=2, edgecolor='none')
+        ax.text((start + end) / 2, 2.0, short, ha='center', va='center',
+                fontsize=base_fs - 1.5, fontweight='bold', color=ink,
+                zorder=4)
 
-    # ====================================================================
-    # 4. Category strips (bottom: y=-0.35 to 0.00) — staircase label layout
-    # ====================================================================
-    cat_strips = [
-        ('Interstadial', SUBSTAGE_TYPE_COLORS['interstadial'], -0.00, -0.12,  15),
-        ('Heinrich',     SUBSTAGE_TYPE_COLORS['heinrich'],     -0.12, -0.24,  35),
-        ('Stadial',      SUBSTAGE_TYPE_COLORS['stadial'],      -0.24, -0.35,  52),
-    ]
-    cat_y_lookup = {
-        'interstadial': (-0.00 + -0.12) / 2,
-        'heinrich':     (-0.12 + -0.24) / 2,
-        'stadial':      (-0.24 + -0.35) / 2,
-    }
-    for label, color, y_lo, y_hi, x_label in cat_strips:
-        ax.axhspan(y_lo, y_hi, 0.0, 1.0,
-                   facecolor=color, alpha=0.78, zorder=2, edgecolor='white',
-                   linewidth=1.0, clip_on=False)
-        ax.text(x_label, (y_lo + y_hi) / 2, label,
-                ha='center', va='center', fontsize=base_fs - 1,
-                fontweight='heavy', color='white', zorder=5, clip_on=False,
-                path_effects=[pe.withStroke(linewidth=1.2, foreground='#333333')])
+    # v15: no frame, no axis here — the band is a bare GTS bar. Black
+    # lines are SEPARATORS ("黑色直线是用来分割"): the one ink line at
+    # the band's bottom edge (step 3) divides the bar zone from the
+    # curve zone; the bottom age-axis line closes the column below
+    # (Westerhold p4: state bar floats over the panel, the panel's own
+    # ink axis at the bottom carries the numbers).
 
-    # ====================================================================
-    # 5. Vertical connectors: each event → its category strip
-    #    From event band bottom (0.14) down to category strip
-    # ====================================================================
-    for start, end, short, category in SUBSTAGES:
-        color = SUBSTAGE_TYPE_COLORS[category]
-        cat_y_mid = cat_y_lookup.get(category)
-        if cat_y_mid is None:
-            continue
-        mid = (start + end) / 2
-        ax.plot([mid, mid], [0.14, cat_y_mid], color=color,
-                linewidth=1.8, alpha=0.50, solid_capstyle='round',
-                zorder=3, clip_on=False)
-        ax.scatter(mid, 0.14, s=20, c=color, edgecolors='white',
-                   linewidth=0.8, zorder=6, clip_on=False)
+    # v13→v15: vertical gridlines threaded through the band (every 5 ka —
+    # the SAME x's as the panel grids below — drawn UNDER the bars).
+    # They surface in the band's white margins (the 2.8–3.0 slit and
+    # the strip between key and event bar), tying the band into the
+    # column-wide grid rising from the bottom age axis.
+    for gx in np.arange(AGE_START + 5, AGE_END, 5):
+        ax.plot([gx, gx], [y_lo, 4.6], color=GRID_COL, lw=GRID_LW,
+                alpha=GRID_ALPHA, zorder=1)
 
-    # ====================================================================
-    # 6. Separator lines between zones
-    # ====================================================================
-    ax.axhline(0.55, color='#CCCCCC', linewidth=0.8, alpha=0.4,
-               zorder=3, clip_on=False)  # MIS bottom / age top
-    ax.axhline(0.48, color='#CCCCCC', linewidth=0.8, alpha=0.4,
-               zorder=3, clip_on=False)  # age bottom / events top
-    ax.axhline(0.12, color='#CCCCCC', linewidth=0.8, alpha=0.4,
-               zorder=3, clip_on=False)  # events bottom / categories
+    # 3. Separator (v15): ONE black line at the band's bottom edge — the
+    #    ink separator dividing the GTS bar zone from the curve zone
+    #    below ("黑色直线是用来分割"). The age axis itself (line + ticks
+    #    + numbers + unit) MOVED to the figure bottom (_draw_age_axis);
+    #    this band carries no axis of its own.
+    ax.plot([AGE_END, AGE_START], [y_lo, y_lo], color=ink, lw=1.4,
+            zorder=4, clip_on=False)
 
+    # 4. Category key — solid colour patch + ink name per category, so
+    #    every colour block in the bars has an explicit pointer (the
+    #    research annotation for the band). Text extends toward
+    #    decreasing age (rightward), so the key is laid out from its
+    #    left edge with x_cur decreasing — that centres it. (v15: sits
+    #    between the bars and the separator; 'Age (ka BP)' moved down to
+    #    the bottom axis row.)
+    key_items = [('Interstadial', SUBSTAGE_TYPE_COLORS['interstadial']),
+                 ('Heinrich', SUBSTAGE_TYPE_COLORS['heinrich']),
+                 ('Stadial', SUBSTAGE_TYPE_COLORS['stadial'])]
+    key_w = sum(0.55 + 0.3 + len(l) * 0.5 for l, _c in key_items) \
+        + 1.0 * (len(key_items) - 1)
+    x_cur = 35.0 + key_w / 2
+    for label, color in key_items:
+        ax.add_patch(Rectangle((x_cur - 0.55, -1.15 - 0.28), 0.55, 0.56,
+                               facecolor=color, edgecolor='none',
+                               zorder=4))
+        ax.text(x_cur - 0.85, -1.15, label, ha='left', va='center',
+                fontsize=base_fs - 1, fontweight='bold', color=ink,
+                zorder=4)
+        x_cur -= 0.55 + 0.3 + len(label) * 0.5 + 1.0
+
+    # No frame, no ticks, no labels — this row is an axis header, not a
+    # panel; only the ink separator line above is visible.
     for spine in ax.spines.values():
         spine.set_visible(False)
     ax.set_xticks([])
     ax.set_yticks([])
 
 
-# ============================================================================
-# Phase block annotation
-# ============================================================================
+def _draw_age_axis(ax, base_fs):
+    """v15: the figure's ONE shared age axis, in its own slim row at the
+    very bottom (user 2026-09-27: "数轴不在下面" — the age numbers must
+    sit under the whole figure). Westerhold p2 geomag-bar style: black
+    line, major/minor ticks pointing DOWN from it, numbers under the
+    ticks, unit centred below. The GTS band on top is now a pure bar and
+    carries no axis; this row is the only place age numbers appear.
 
-def _add_phase_block(ax, x_start, x_end, y_lo=0, y_hi=1, label='', n_fade=20):
-    """Gradient-faded annotation block.
-
-    y_lo / y_hi are in *axes fraction* (same as axvspan ymin/ymax).
-    Text is placed using a blended transform so its y is also in axes fraction,
-    guaranteeing it stays centred inside the shaded block.
+    ylim (0, 1): line at 0.8, major ticks 0.8→0.70 (every 10 ka), minor
+    0.8→0.75 (every 5 ka), labels 0.60 va='top', unit 0.12 va='center'.
     """
-    from matplotlib.transforms import blended_transform_factory
-    x_span = x_end - x_start
-    fw = x_span * 0.12
-    for i in range(n_fade):
-        frac = (i + 0.5) / n_fade
-        a = np.sin(frac * np.pi / 2) ** 1.5
-        x0 = x_start + (i / n_fade) * fw
-        x1 = x_start + ((i + 1) / n_fade) * fw
-        if x1 > x0:
-            ax.axvspan(x0, x1, y_lo, y_hi,
-                       facecolor='#1A1A1A', alpha=a * 0.50, zorder=20, edgecolor='none')
-    fl, fr = x_start + fw, x_end - fw
-    if fl < fr:
-        ax.axvspan(fl, fr, y_lo, y_hi,
-                   facecolor='#1A1A1A', alpha=0.50, zorder=20, edgecolor='none')
-    for i in range(n_fade):
-        frac = (i + 0.5) / n_fade
-        a = np.cos(frac * np.pi / 2) ** 1.5
-        x0 = fr + (i / n_fade) * fw
-        x1 = fr + ((i + 1) / n_fade) * fw
-        if x1 > x0:
-            ax.axvspan(x0, x1, y_lo, y_hi,
-                       facecolor='#1A1A1A', alpha=a * 0.50, zorder=20, edgecolor='none')
-    mid = (x_start + x_end) / 2
-    ym = (y_lo + y_hi) / 2
-    # Blended transform: x in data, y in axes fraction — matches axvspan
-    trans_blend = blended_transform_factory(ax.transData, ax.transAxes)
-    ax.text(mid, ym, label, ha='center', va='center',
-            fontsize=plt.rcParams['font.size'] + 1,
-            fontweight='heavy', color='white', zorder=23,
-            transform=trans_blend)
+    ink = '#24201F'   # Westerhold ink (not pure black)
+
+    ax.set_xlim(AGE_END, AGE_START)
+    ax.set_ylim(0, 1)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    ax.plot([AGE_END, AGE_START], [0.8, 0.8], color=ink, lw=1.4, zorder=4)
+    for ta in np.arange(AGE_START, AGE_END + 0.01, 10):
+        ax.plot([ta, ta], [0.8, 0.70], color=ink, lw=1.0, zorder=4)
+        ax.text(ta, 0.60, f'{ta:.0f}', ha='center', va='top',
+                fontsize=base_fs - 1, color=ink, zorder=4)
+    for ta in np.arange(AGE_START, AGE_END + 0.01, 5):
+        if ta % 10:
+            ax.plot([ta, ta], [0.8, 0.75], color=ink, lw=0.5, zorder=4)
+    ax.text(35.0, 0.12, 'Age (ka BP)', ha='center', va='center',
+            fontsize=base_fs - 1, fontweight='bold', color=ink, zorder=4)
 
 
 # Main
 # ============================================================================
 
 def main():
+    # Fixed seed: makes the perturbation ensembles exactly reproducible
+    np.random.seed(42)
+
     parser = argparse.ArgumentParser(
         description='Sliding-window CARC causality analysis')
     parser.add_argument('--pair', type=str, default='NGRIP,EDC_dD',

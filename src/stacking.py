@@ -8,6 +8,10 @@ Used in: 0-800.py, 堆叠A.py, 堆叠相位差.py, 网络相位差.py
 import numpy as np
 from scipy.ndimage import gaussian_filter1d
 
+# Module-level RNG: stacking ensembles are reproducible across runs.
+# Callers may override by passing an explicit ``rng``.
+_MODULE_RNG = np.random.default_rng(42)
+
 
 def classify_record(filename):
     """
@@ -33,9 +37,14 @@ def classify_record(filename):
                                  'vostok', 'jouzel', 'bereiter', 'neem',
                                  'ch4 over past']):
         typ = 'ice_core'
+    # Speleothems — must come BEFORE marine to avoid misclassification
+    elif any(k in name for k in ['speleo', 'cheng', 'dongge', 'sanbao', 'hulu',
+                                 'botuvera', 'sudwala', 'paixao', 'santana',
+                                 'marota', 'lapa']):
+        typ = 'speleothem'
     elif any(k in name for k in ['odp', 'u13', 'u14', 'u15', 'u1446', 'u1476', 'u1483',
                                  'u1542', 'm125', 'ps75', 'md0', 'md1', 'md2', 'md9',
-                                 'md-', 'kx97', 'ipwp', 'cariaco', 'dsr', 'botuvera',
+                                 'md-', 'kx97', 'ipwp', 'cariaco', 'dsr',
                                  'framstrait', 'barker', 'mcmanus', 'naafs',
                                  'clemens', 'g.ruber', 'g_ruber', 'd18og.rub',
                                  'ln k-al', 'ln ti-ca',
@@ -43,8 +52,6 @@ def classify_record(filename):
                                  'sst=0-2.7', 'ohc-stack',
                                  'ba=128', 'br.csv']):
         typ = 'marine'
-    elif any(k in name for k in ['speleo', 'cheng', 'dongge', 'sanbao', 'hulu']):
-        typ = 'speleothem'
     elif any(k in name for k in ['loess', 'gulang', 'weinan', 'luochuan', 'xifeng',
                                  'yimaguan', 'zb13', 'chb14', 'gl-fe', 'gl_',
                                  'lc gt', 'ymg gt', 'pollen=0-800', 'gt32']):
@@ -140,7 +147,7 @@ def stack_region(region_records, grid, n_pert, rng=None, smooth_sigma=5.0):
     stacked : np.ndarray of shape (n_pert, len(grid))
     """
     if rng is None:
-        rng = np.random.default_rng()
+        rng = _MODULE_RNG
 
     dt = grid[1] - grid[0]
     stacked = np.zeros((n_pert, len(grid)))

@@ -25,13 +25,22 @@ SCENARIO_A_CONFIG = {
     'phi_z': 0.6, 'sigma_z': 0.8,
     'n_pulses': 25, 'pulse_width': 0.4, 'pulse_decay': 1.2, 'pulse_amplitude': 1.0,
     'orbital_amp': 0.5, 'orbital_period': 40.0,
+    # Per-record parameters (data-grounded, scripts/22_scenarioA_final.py):
+    #   sigma_eps = innovation std of the marginal AR(1) fitted to the
+    #     corresponding Tier-1 real record (10-60 ka, 50-yr grid);
+    #   phi = CALIBRATED generator AR coefficient whose generated marginal
+    #     AR(1) matches the fitted one under the common forcing (bisection,
+    #     primary loading beta = 0.25);
+    #   beta = common-forcing loading (unidentifiable from data by premise,
+    #     swept over {0.15, 0.25, 0.35}; 0.25 = primary value);
+    #   age_err = published 1-sigma age-model uncertainty (src.config.TIER1_SIGMA).
     'variables': {
-        'NGRIP':   {'phi': 0.82, 'beta': 0.35, 'sigma_eps': 0.45, 'age_err': 0.65},
-        'EDC_dD':  {'phi': 0.80, 'beta': 0.35, 'sigma_eps': 0.55, 'age_err': 0.83},
-        'CO2':     {'phi': 0.90, 'beta': 0.25, 'sigma_eps': 0.80, 'age_err': 1.65},
-        'CH4':     {'phi': 0.88, 'beta': 0.25, 'sigma_eps': 0.70, 'age_err': 1.66},
-        'Cariaco': {'phi': 0.72, 'beta': 0.40, 'sigma_eps': 0.30, 'age_err': 0.23},
-        'Cheng':   {'phi': 0.75, 'beta': 0.40, 'sigma_eps': 0.25, 'age_err': 0.14}
+        'NGRIP':   {'phi': 0.6388, 'beta': 0.25, 'sigma_eps': 0.7015, 'age_err': 0.65},
+        'EDC_dD':  {'phi': 0.8515, 'beta': 0.25, 'sigma_eps': 0.2988, 'age_err': 0.83},
+        'CO2':     {'phi': 0.9355, 'beta': 0.25, 'sigma_eps': 0.0707, 'age_err': 1.65},
+        'CH4':     {'phi': 0.9101, 'beta': 0.25, 'sigma_eps': 0.1114, 'age_err': 1.66},
+        'Cariaco': {'phi': 0.8345, 'beta': 0.25, 'sigma_eps': 0.3771, 'age_err': 0.23},
+        'Cheng':   {'phi': 0.8409, 'beta': 0.25, 'sigma_eps': 0.3575, 'age_err': 0.14}
     },
     'causal_edges': [
         ('NGRIP', 'EDC_dD', 0.8),
@@ -57,7 +66,7 @@ def _generate_do_pulses(t_grid, n_pulses, width, decay, amplitude=1.0, seed=None
 
 
 def generate_scenario_A(seed=None, include_orbital=True, include_pulses=True,
-                        include_age_errors=True):
+                        include_age_errors=True, return_Z=False):
     """
     Generate synthetic paleoclimate data for Scenario A.
 
@@ -67,12 +76,15 @@ def generate_scenario_A(seed=None, include_orbital=True, include_pulses=True,
     include_orbital : bool
     include_pulses : bool
     include_age_errors : bool
+    return_Z : bool
+        If True, additionally return the common forcing Z (for ARC probes).
 
     Returns
     -------
     data : dict of {name: np.ndarray}
     causal_edges : list of (driver, target, lag_ka)
     time_grid : np.ndarray
+    Z : np.ndarray (only if return_Z=True)
     """
     cfg = SCENARIO_A_CONFIG
     if seed is not None:
@@ -96,11 +108,13 @@ def generate_scenario_A(seed=None, include_orbital=True, include_pulses=True,
         Z += orbital
 
     if include_pulses:
+        # NOTE: no seed passed — pulse positions are drawn from the current
+        # RNG stream so the realization is bit-identical to the canonical
+        # generator in scripts/22_scenarioA_final.py.
         pulses = _generate_do_pulses(t_grid, cfg['n_pulses'],
                                      width=cfg['pulse_width'],
                                      decay=cfg['pulse_decay'],
-                                     amplitude=cfg['pulse_amplitude'],
-                                     seed=seed)
+                                     amplitude=cfg['pulse_amplitude'])
         Z += pulses
 
     Z = (Z - np.mean(Z)) / np.std(Z)
@@ -140,6 +154,8 @@ def generate_scenario_A(seed=None, include_orbital=True, include_pulses=True,
                 data[name] = new_vals
             data[name] = (data[name] - np.mean(data[name])) / np.std(data[name])
 
+    if return_Z:
+        return data, cfg['causal_edges'], t_grid, Z
     return data, cfg['causal_edges'], t_grid
 
 

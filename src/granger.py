@@ -16,6 +16,10 @@ from statsmodels.tsa.api import VAR
 
 from .config import MAX_GRANGER_LAG, ALPHA_LEVEL, STABILITY_THRESHOLD, NOISE_STD
 
+# Module-level RNG: perturbation ensembles are reproducible across runs.
+# Callers may override by passing an explicit ``rng``.
+_MODULE_RNG = np.random.default_rng(42)
+
 
 def select_var_lag(df, maxlag=MAX_GRANGER_LAG):
     """
@@ -134,7 +138,7 @@ def granger_detect(data_dict, maxlag=MAX_GRANGER_LAG, alpha=ALPHA_LEVEL):
     return detected
 
 
-def age_perturb(series, sigma_err, rng=None):
+def age_perturb(series, sigma_err, rng=None, dt=1.0):
     """
     Perturb the time axis of a series by N(0, sigma_err), re-sort, and
     interpolate back to the original grid.
@@ -143,7 +147,10 @@ def age_perturb(series, sigma_err, rng=None):
     ----------
     series : np.ndarray (1D)
     sigma_err : float
-        Age error standard deviation (ka).
+        Age error standard deviation in PHYSICAL ka units (converted to
+        grid index units via ``dt``).
+    dt : float
+        Grid spacing in ka (default 1.0; pass 0.05 for the 10–60 ka grid).
     rng : np.random.Generator or None
 
     Returns
@@ -151,11 +158,11 @@ def age_perturb(series, sigma_err, rng=None):
     perturbed : np.ndarray (same length as input)
     """
     if rng is None:
-        rng = np.random.default_rng()
+        rng = _MODULE_RNG
 
     n = len(series)
     orig = np.arange(n)
-    perturbed = orig + rng.normal(0, sigma_err, n)
+    perturbed = orig + rng.normal(0, sigma_err / dt, n)
     idx = np.argsort(perturbed)
     perturbed_sorted = perturbed[idx]
     series_sorted = series[idx]
@@ -169,20 +176,29 @@ def age_perturb(series, sigma_err, rng=None):
     return result
 
 
-def age_perturb_pair(Y, X, sigma_err, rng=None):
+def age_perturb_pair(Y, X, sigma_err, rng=None, dt=1.0):
     """
     Apply age perturbation to two series simultaneously (same perturbed time axis).
+
+    Parameters
+    ----------
+    sigma_err : float
+        Combined 1σ age uncertainty in PHYSICAL ka units. Converted to grid
+        index units via ``dt`` (index noise = sigma_err / dt).
+    dt : float
+        Grid spacing in ka (default 1.0, i.e. series sampled every 1 ka).
+        Pass 0.05 for the 10–60 ka high-resolution grid.
 
     Returns
     -------
     Yp, Xp : np.ndarray (same length, may be slightly shorter if edge NaN removed)
     """
     if rng is None:
-        rng = np.random.default_rng()
+        rng = _MODULE_RNG
 
     n = len(Y)
     orig = np.arange(n)
-    perturbed = orig + rng.normal(0, sigma_err, n)
+    perturbed = orig + rng.normal(0, sigma_err / dt, n)
     idx = np.argsort(perturbed)
     perturbed_sorted = perturbed[idx]
 
@@ -199,7 +215,7 @@ def age_perturb_pair(Y, X, sigma_err, rng=None):
 
 
 def robustness(Y, X, sigma_err, n_perturb=200, maxlag=MAX_GRANGER_LAG,
-               alpha=ALPHA_LEVEL, noise_std=NOISE_STD, rng=None):
+               alpha=ALPHA_LEVEL, noise_std=NOISE_STD, rng=None, dt=1.0):
     """
     Compute CARC robustness score: fraction of age-perturbed tests where
     X Granger-causes Y at p < alpha.
@@ -209,7 +225,9 @@ def robustness(Y, X, sigma_err, n_perturb=200, maxlag=MAX_GRANGER_LAG,
     Y, X : np.ndarray
         Target and source series.
     sigma_err : float
-        Combined age error.
+        Combined age error (ka; see ``age_perturb_pair`` for units).
+    dt : float
+        Grid spacing in ka (default 1.0).
     n_perturb : int
         Number of perturbation iterations.
     maxlag : int
@@ -223,11 +241,11 @@ def robustness(Y, X, sigma_err, n_perturb=200, maxlag=MAX_GRANGER_LAG,
     robustness : float (0.0 to 1.0)
     """
     if rng is None:
-        rng = np.random.default_rng()
+        rng = _MODULE_RNG
 
     sig = 0
     for _ in range(n_perturb):
-        Yp, Xp = age_perturb_pair(Y, X, sigma_err, rng)
+        Yp, Xp = age_perturb_pair(Y, X, sigma_err, rng, dt=dt)
         if noise_std > 0:
             Yp = Yp + rng.normal(0, noise_std * np.std(Yp), size=len(Yp))
             Xp = Xp + rng.normal(0, noise_std * np.std(Xp), size=len(Xp))
