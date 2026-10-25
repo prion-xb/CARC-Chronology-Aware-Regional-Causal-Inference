@@ -6,12 +6,14 @@
 Table 2 rebuild: Scenario A with CCM and PCMCI as alternative Layer-3
 causal testers (paper Section 4.1, Table 2).
 
-Paper Table 2 targets (robustness %):
+Paper Table 2 (robustness %, current measured values; the CCM/PCMCI
+columns are reproduced by this script, the Granger column by the Table 1
+driver scripts/22_scenarioA_final.py):
   edge             lambda   Granger   CCM     PCMCI
-  NGRIP->EDC_dD    ~1.2     ~70       ~65     ~60
-  CO2->CH4         ~0.9     ~60       ~55     ~50
-  Cariaco->Cheng   ~10.0     96        95      95
-  (Granger column = scripts/34 canonical config, measured in P1)
+  NGRIP->EDC_dD    ~1.2      6.0      4.0     41.0
+  CO2->CH4         ~0.9      6.5      0.5     42.5
+  Cariaco->Cheng   ~10.0     4.5      0.0     97.5
+  (controls: CCM <= 8.5%, PCMCI <= 98.0%)
 
 The supplementary's Appendix A description of the CCM/PCMCI settings was
 lost with the implementation (the dump contains no CCM/PCMCI section), so
@@ -225,8 +227,9 @@ def main():
     df.to_csv(out_csv, index=False)
     print(f"\nSaved: {out_csv}\n")
     print(df.to_string(index=False))
-    print("\nPaper Table 2 targets: Granger ~70/~60/96, CCM ~65/~55/95, "
-          "PCMCI ~60/~50/95; controls 0% (unreproducible per P1 finding).")
+    print("\nPaper Table 2 (measured): Granger 6.0/6.5/4.5, "
+          "CCM 4.0/0.5/0.0, PCMCI 41.0/42.5/97.5; "
+          "controls CCM <= 8.5%, PCMCI <= 98.0%.")
 
 
 if __name__ == '__main__':
