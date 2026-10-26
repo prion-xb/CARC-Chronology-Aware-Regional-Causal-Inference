@@ -319,7 +319,7 @@ def main():
                          'Table S5 matrix) instead of the three classical '
                          'pairings')
     ap.add_argument('--obs-noise', action='store_true',
-                    help='add 5% observational noise to both series per '
+                    help='add 5%% observational noise to both series per '
                          'draw (current paper Section 3.4)')
     ap.add_argument('--windows', nargs='*', default=None,
                     help='subset of windows to run')

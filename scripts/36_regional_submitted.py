@@ -480,7 +480,7 @@ def main():
                          'undeconfounded, all others deconfounded against '
                          'the per-draw NA stack (Sec 5.4)')
     ap.add_argument('--obs-noise', action='store_true',
-                    help='add 5% observational noise per perturbation '
+                    help='add 5%% observational noise per perturbation '
                          'member (current Sec 3.4)')
     ap.add_argument('--na-proxy-smooth', choices=['1k', 'raw'], default='1k',
                     help='with --na-raw: smooth the NA composite proxy with '

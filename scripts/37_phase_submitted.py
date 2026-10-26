@@ -163,7 +163,7 @@ def main():
                     help='NA composite undeconfounded, others deconfounded '
                          'against the per-draw NA stack (current Sec 5.4)')
     ap.add_argument('--obs-noise', action='store_true',
-                    help='5% observational noise per perturbation member')
+                    help='5%% observational noise per perturbation member')
     ap.add_argument('--out', default='phase_submitted_table5',
                     help='output basename under outputs/')
     args = ap.parse_args()
