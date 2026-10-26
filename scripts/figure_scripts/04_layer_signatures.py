@@ -47,7 +47,7 @@ paper eq. 5): the sqrt(lambda_eff/2) form seen in an old Fig. 1 caption does
 not match eq. 5 nor the 34.4% anchor and must not enter figures.
 
 Usage:
-    python scripts/fignew/04_layer_signatures.py
+    python scripts/figure_scripts/04_layer_signatures.py
 """
 from __future__ import annotations
 
@@ -75,7 +75,7 @@ from src.config import (DATA_DIR, AGE_GRID_10_60, N_PERTURB,  # noqa: E402
 from src.io import load_all_records, filter_canonical_records  # noqa: E402
 from src.stacking import build_region_dict  # noqa: E402
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "04_layer_signatures")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "04_layer_signatures")
 
 # canonical stacking machinery (median scheme) of scripts/18 (as reused by 33)
 SPEC = importlib.util.spec_from_file_location(

@@ -47,8 +47,8 @@ Convergence targets (asserted):
          Ca/Sr 31, alkenone SST 29, Si/Ti 27 (-age); IPWP OHC 52 (-ARC)
 
 Usage:
-    python scripts/fignew/15_attribution_scrutiny.py
-Outputs: figures_new/15_attribution_scrutiny/attribution_scrutiny.png / .svg
+    python scripts/figure_scripts/15_attribution_scrutiny.py
+Outputs: figures_rebuilt/15_attribution_scrutiny/attribution_scrutiny.png / .svg
 """
 from __future__ import annotations
 
@@ -70,7 +70,7 @@ from src.config import OUTPUT_DIR  # noqa: E402
 from src.record_names import display_name  # noqa: E402
 
 SCAN_DIR = os.path.join(OUTPUT_DIR, "pairwise_scan")
-OUT_DIR = os.path.join(ROOT, "figures_new", "15_attribution_scrutiny")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "15_attribution_scrutiny")
 
 FIG_W, FIG_H = 178.0, 225.0
 AX_L, AX_R = 0.07, 0.985

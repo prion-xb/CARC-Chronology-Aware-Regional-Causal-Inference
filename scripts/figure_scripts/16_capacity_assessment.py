@@ -13,7 +13,7 @@ shape observed in Scenario A.
 Design (user decisions 2026-09-13: pair x window grid for N1; best-case
 NGRIP->EDC relative-gain shape, multiplicative model, for the N2
 conversion; two outputs so the main-text / supplement placement stays
-open, 需求总结 section 12.2):
+open, requirements summary section 12.2):
   16a capacity_regions  (178 x 148 mm): 15 pair rows x 6 window columns.
       Each cell = one pair-window: filled dot A->B, hollow dot B->A
       (driver-region colour), vertical span = directional spread, in-cell
@@ -42,9 +42,9 @@ Convergence targets (asserted):
        control max 7.25% + 0 controls pass, 0.1x = 92.5% / control 54.5%.
 
 Usage:
-    python scripts/fignew/16_capacity_assessment.py
-Outputs: figures_new/16_capacity_assessment/capacity_regions.{png,svg},
-         figures_new/16_capacity_assessment/capacity_records.{png,svg}
+    python scripts/figure_scripts/16_capacity_assessment.py
+Outputs: figures_rebuilt/16_capacity_assessment/capacity_regions.{png,svg},
+         figures_rebuilt/16_capacity_assessment/capacity_records.{png,svg}
 """
 from __future__ import annotations
 
@@ -66,7 +66,7 @@ from style import (SURFACE, INK, SECONDARY_INK, GRID, THR_95, THR_LADDER,  # noq
 from src.config import OUTPUT_DIR  # noqa: E402
 from src.record_names import display_name  # noqa: E402
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "16_capacity_assessment")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "16_capacity_assessment")
 
 FIG_W = 178.0
 FIG_H_A = 148.0          # 16a: pair x window grid
@@ -213,7 +213,7 @@ def draw_cell(fig, gs, i, j, src, dst, w, rates, emph):
     ba = float(rates[(src, dst, w, "B_to_A")])
     assert np.isfinite(ab) and np.isfinite(ba)
 
-    # in-cell ladder: 95% solid + 70% dashed (matrix rendering, 需求总结 §5)
+    # in-cell ladder: 95% solid + 70% dashed (matrix rendering, requirements summary §5)
     ax.axhline(0.95, color=THR_95, lw=0.9, zorder=1)
     ax.axhline(0.70, color=THR_LADDER, lw=0.7, ls=(0, (3, 3)), zorder=1)
 

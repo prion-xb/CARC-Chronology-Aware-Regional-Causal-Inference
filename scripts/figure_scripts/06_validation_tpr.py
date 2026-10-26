@@ -39,12 +39,12 @@ canonical scripts stay untouched.  Each cell writes an atomic checkpoint
 interruption; reruns skip finished cells.
 
 Usage:
-    python scripts/fignew/06_validation_tpr.py --quick      # smoke
-    python scripts/fignew/06_validation_tpr.py              # full sweep
-    python scripts/fignew/06_validation_tpr.py --force      # recompute all
-    python scripts/fignew/06_validation_tpr.py --plot-only  # redraw figure
+    python scripts/figure_scripts/06_validation_tpr.py --quick      # smoke
+    python scripts/figure_scripts/06_validation_tpr.py              # full sweep
+    python scripts/figure_scripts/06_validation_tpr.py --force      # recompute all
+    python scripts/figure_scripts/06_validation_tpr.py --plot-only  # redraw figure
 Outputs: outputs/validation_tpr_sweep.csv (+ outputs/06_ckpt_*.json),
-figures_new/06_validation_tpr/validation_tpr.png / .svg
+figures_rebuilt/06_validation_tpr/validation_tpr.png / .svg
 """
 from __future__ import annotations
 
@@ -68,7 +68,7 @@ from style import (apply_paleo_style, honesty_ladder, save, INK,
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("MKL_NUM_THREADS", "1")
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "06_validation_tpr")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "06_validation_tpr")
 OUT_CSV = os.path.join(ROOT, "outputs", "validation_tpr_sweep.csv")
 
 CANONICAL_C = 0.4
@@ -383,7 +383,7 @@ def plot(df):
 
 
 def _ladder_reading(df, method):
-    """'k/6 @95%, k/6 @70%' idiom per style (需求总结 Section 5)."""
+    """'k/6 @95%, k/6 @70%' idiom per style (requirements summary, Section 5)."""
     bits = []
     for style, tag in (("err", "1x"), ("noerr", "no errors")):
         mean, _, _ = _tpr_series(df, method, style)

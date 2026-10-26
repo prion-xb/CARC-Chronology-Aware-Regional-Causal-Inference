@@ -38,7 +38,7 @@ CAT7 = "#4a3aa7"   # violet
 CAT8 = "#e34948"   # red
 
 # ----------------------------------------------------- regional colours -----
-# Fixed region colour slots (cross-figure symbol, README_规划.md): the six
+# Fixed region colour slots (cross-figure symbol, planning README): the six
 # paper regions take CAT1..CAT6 in the canonical PAPER_REGIONS order used by
 # scripts/08/09/17/18, so every adjacent pair in region order is a validated
 # CVD pair.  Colour follows the entity, never the rank - do NOT re-order
@@ -66,7 +66,7 @@ AGE_AXIS_INVERTED = True
 # ------------------------------------------------------------- fonts / AI ---
 # Arial first (Windows + Illustrator native); mathtext glyphs (beta, sigma,
 # delta, ...) also Arial so AI never reports missing glyphs. SVG text stays
-# editable text objects. Applied once at import time for every fignew script.
+# editable text objects. Applied once at import time for every figure_scripts script.
 mpl.rcParams.update({
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans", "sans-serif"],
@@ -168,7 +168,7 @@ def tag_role_gids(fig):
     groups (axes > matplotlib.axis_N > xtick_N > line), so a per-gridline
     gid would be wrapped by src.svg_export into a useless micro-layer
     nested in each tick group. They stay in layer-frame instead (per
-    需求总结.md section 4: ``layer-grid`` only covers gridlines that are
+    requirements summary, section 4: ``layer-grid`` only covers gridlines that are
     direct children of the axes).
     """
     from matplotlib.collections import Collection, PathCollection
@@ -195,7 +195,7 @@ def tag_role_gids(fig):
 
 
 # --------------------------------------------------------------- ladder -----
-# honesty ladder (README_规划.md cross-figure symbol): 95/90/85/80/75/70
+# honesty ladder (planning README cross-figure symbol): 95/90/85/80/75/70
 HONESTY_RUNGS = (0.95, 0.90, 0.85, 0.80, 0.75, 0.70)
 HONESTY_BAND = (0.70, 0.95)
 

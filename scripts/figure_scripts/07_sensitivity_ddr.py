@@ -23,8 +23,8 @@ per cell (5-15 replicate runs per cell).
 Convergence target (asserted): DDR(alpha=0.5, sigma=0.05) = 6.65.
 
 Usage:
-    python scripts/fignew/07_sensitivity_ddr.py
-Outputs: figures_new/07_sensitivity_ddr/sensitivity_ddr.png / .svg
+    python scripts/figure_scripts/07_sensitivity_ddr.py
+Outputs: figures_rebuilt/07_sensitivity_ddr/sensitivity_ddr.png / .svg
 """
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ for p in (os.path.dirname(os.path.abspath(__file__)), ROOT):
 from style import (apply_paleo_style, save, INK, SECONDARY_INK, GRID,  # noqa: E402
                    CAT2)
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "07_sensitivity_ddr")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "07_sensitivity_ddr")
 
 # SEQ blue ramp capped at #5e97df: black 9pt annotations stay readable on
 # the darkest cell (contrast >= 6.9:1 against the max-DDR cell colour).

@@ -26,7 +26,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, os.path.join(ROOT, "src"))
 from record_names import display_name  # noqa: E402
 
-OUT = os.path.join(ROOT, "figures_new", "02_records_overview")
+OUT = os.path.join(ROOT, "figures_rebuilt", "02_records_overview")
 
 # sequential blue ramp (dark -> light) for Tier 1 -> 3
 TIER_COLORS = {"Tier 1": "#184f95", "Tier 2": "#3987e5", "Tier 3": "#9ec5f4"}

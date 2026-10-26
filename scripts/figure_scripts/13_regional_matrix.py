@@ -15,7 +15,7 @@ Design (double column, 178 x 178 mm):
   column robustness over the six climate windows (window encoded by
   position, oldest first: GS-12, GI-12, H4, LGM, H1, B-A), with the window
   median as a thick bar, the 95%/70% honesty rungs as hairlines (matrix
-  in-cell ladder per 需求总结: 95% solid + 70% dashed), and stars marking
+  in-cell ladder per the requirements summary: 95% solid + 70% dashed), and stars marking
   the 21 phase-significant pair-windows of Table 5.  Cell curves take the
   driver region's fixed colour slot (style.REGION_CATS); the diagonal
   carries the region chip + name + record count of the scripts/09 stack.
@@ -38,8 +38,8 @@ Convergence targets (asserted):
   MD04-2881_Br_128-760ka, Lapa_d18O excluded)
 
 Usage:
-    python scripts/fignew/13_regional_matrix.py
-Outputs: figures_new/13_regional_matrix/regional_matrix.png / .svg
+    python scripts/figure_scripts/13_regional_matrix.py
+Outputs: figures_rebuilt/13_regional_matrix/regional_matrix.png / .svg
 """
 from __future__ import annotations
 
@@ -63,7 +63,7 @@ from src.config import OUTPUT_DIR, DATA_DIR  # noqa: E402
 from src.io import load_all_records, filter_canonical_records  # noqa: E402
 from src.stacking import build_region_dict  # noqa: E402
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "13_regional_matrix")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "13_regional_matrix")
 
 FIG_W, FIG_H = 178.0, 178.0
 GRID_L, GRID_R, GRID_T, GRID_B = 0.150, 0.985, 0.885, 0.385
@@ -211,7 +211,7 @@ def cell(fig, gs, i, j, src, dst, rates, counts, stars_placed):
                                    clip_on=False, gid='layer-annotations'))
 
         # in-cell ladder: 95% solid + 70% dashed (matrix rendering of the
-        # honesty ladder, 需求总结 section 5)
+        # honesty ladder, requirements summary section 5)
         ax.axhline(0.95, color=THR_95, lw=0.9, zorder=1)
         ax.axhline(0.70, color=THR_LADDER, lw=0.7, ls=(0, (3, 3)), zorder=1)
 

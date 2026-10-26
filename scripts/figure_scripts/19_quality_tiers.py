@@ -16,7 +16,7 @@ error the pipeline perturbs with (SPECIAL_SIGMA / DEFAULT_SIGMA via
 src.io.load_all_records).
 
 Usage:
-    python scripts/fignew/19_quality_tiers.py
+    python scripts/figure_scripts/19_quality_tiers.py
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ for p in (os.path.dirname(os.path.abspath(__file__)), ROOT):
 from style import (apply_paleo_style, save, INK, GRID,  # noqa: E402
                    SECONDARY_INK, SURFACE)
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "19_quality_tiers")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "19_quality_tiers")
 
 FIG_W, FIG_H = 178.0, 112.0          # print size, mm
 

@@ -2,7 +2,7 @@
 Regional stacking: record classification, region grouping, and ensemble stacking
 with age-perturbation.
 
-Used in: 0-800.py, 堆叠A.py, 堆叠相位差.py, 网络相位差.py
+Used in: legacy 800-ka drivers (regional stacking A, stacking phase lags, network phase lags).
 """
 
 import numpy as np

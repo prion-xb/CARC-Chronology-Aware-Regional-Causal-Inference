@@ -28,7 +28,7 @@ verified bit-identical to the generator's internal Z by reproducing NGRIP
 from the same seed.
 
 Usage:
-    python scripts/fignew/05_scenarioA_series.py
+    python scripts/figure_scripts/05_scenarioA_series.py
 """
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ for p in (os.path.dirname(os.path.abspath(__file__)), ROOT):
 
 from style import (apply_paleo_style, save, INK, CAT1, CAT2, CAT3)  # noqa: E402
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "05_scenarioA_series")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "05_scenarioA_series")
 
 # canonical generator (scripts/22_scenarioA_final.py, module name kept local)
 SPEC = importlib.util.spec_from_file_location(

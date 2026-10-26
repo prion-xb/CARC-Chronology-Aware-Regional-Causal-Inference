@@ -24,7 +24,7 @@ from data_io import read_record  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__)))))
-OUT = os.path.join(ROOT, "figures_new", "demos")
+OUT = os.path.join(ROOT, "figures_rebuilt", "demos")
 
 # three North Atlantic records, chosen to span very different ages & units
 DEMO_RECORDS = [

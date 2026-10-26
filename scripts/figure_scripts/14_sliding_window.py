@@ -36,8 +36,8 @@ Convergence targets (asserted):
   (a) series on the 1001-point grid, standardized (std = 1)
 
 Usage:
-    python scripts/fignew/14_sliding_window.py
-Outputs: figures_new/14_sliding_window/sliding_window.png / .svg
+    python scripts/figure_scripts/14_sliding_window.py
+Outputs: figures_rebuilt/14_sliding_window/sliding_window.png / .svg
 """
 from __future__ import annotations
 
@@ -68,7 +68,7 @@ SPEC = importlib.util.spec_from_file_location(
 sw15 = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(sw15)
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "14_sliding_window")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "14_sliding_window")
 
 FIG_W, FIG_H = 178.0, 220.0
 AX_L, AX_R = 0.075, 0.985

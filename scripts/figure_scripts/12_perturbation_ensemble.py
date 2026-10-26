@@ -36,8 +36,8 @@ Convergence targets (asserted):
   North Atlantic stack: exactly 1 local maximum at prominence >= 0.12
 
 Usage:
-    python scripts/fignew/12_perturbation_ensemble.py
-Outputs: figures_new/12_perturbation_ensemble/perturbation_ensemble.png / .svg
+    python scripts/figure_scripts/12_perturbation_ensemble.py
+Outputs: figures_rebuilt/12_perturbation_ensemble/perturbation_ensemble.png / .svg
 """
 from __future__ import annotations
 
@@ -66,7 +66,7 @@ spec = importlib.util.spec_from_file_location(
 s11 = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(s11)
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "12_perturbation_ensemble")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "12_perturbation_ensemble")
 
 # detection / matching parameters (documented in the footer)
 PROM_THR = 2.2          # peak/trough prominence floor (standardized units)

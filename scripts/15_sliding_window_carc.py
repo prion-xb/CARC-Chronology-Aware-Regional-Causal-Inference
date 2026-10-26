@@ -80,7 +80,7 @@ AX_TICK_COL  = '#282626'   # tick marks
 AX_LABEL_COL = '#111111'   # axis titles / tick labels
 GRID_COL     = '#3b3e3e'
 GRID_ALPHA   = 0.35   # v11: 0.30→0.35 — hairline grid must stay clearly visible (user could not see the v10 thinning)
-GRID_LW      = 0.3    # v10: hairline grid (user: 网格线不要太粗，细一点) — 0.6pt read thick
+GRID_LW      = 0.3    # v10: hairline grid (requested: keep gridlines thin) — 0.6pt read thick
 SPINE_LW     = 2.0
 
 # ============================================================================
@@ -345,7 +345,7 @@ def plot_sliding_window(results, pair, out_dir=None):
 
     # ---- Figure grid: GTS band on TOP, panels, age axis at the BOTTOM ----
     # v15: the shared age axis moves to the figure bottom (user 2026-09-27:
-    # "数轴不在下面" — the age numbers must sit under the whole figure).
+    # "axis belongs at the bottom" — the age numbers must sit under the whole figure).
     # Row 0 = stratigraphy band (pure bar, NO axis of its own), rows 1-4 =
     # panels (a)-(d), row 5 = the single age-axis row (black line +
     # downward ticks + numbers + unit, Westerhold p2 geomag-bar style).
@@ -705,7 +705,7 @@ def _draw_stratigraphy_band(ax, base_fs):
         pair from touching)
       - category key (solid colour patch + ink name per category)
       - v15: bottom-edge ink separator line — black lines are SEPARATORS
-        ("黑色直线是用来分割"); the age axis itself (line + ticks +
+        ("black lines are separators"); the age axis itself (line + ticks +
         numbers + 'Age (ka BP)') moved to the figure BOTTOM, see
         _draw_age_axis
     The CENOGRID geological bar is ONE thin strip of solid colour with
@@ -747,7 +747,7 @@ def _draw_stratigraphy_band(ax, base_fs):
                 zorder=4)
 
     # v15: no frame, no axis here — the band is a bare GTS bar. Black
-    # lines are SEPARATORS ("黑色直线是用来分割"): the one ink line at
+    # lines are SEPARATORS ("black lines are separators"): the one ink line at
     # the band's bottom edge (step 3) divides the bar zone from the
     # curve zone; the bottom age-axis line closes the column below
     # (Westerhold p4: state bar floats over the panel, the panel's own
@@ -764,7 +764,7 @@ def _draw_stratigraphy_band(ax, base_fs):
 
     # 3. Separator (v15): ONE black line at the band's bottom edge — the
     #    ink separator dividing the GTS bar zone from the curve zone
-    #    below ("黑色直线是用来分割"). The age axis itself (line + ticks
+    #    below ("black lines are separators"). The age axis itself (line + ticks
     #    + numbers + unit) MOVED to the figure bottom (_draw_age_axis);
     #    this band carries no axis of its own.
     ax.plot([AGE_END, AGE_START], [y_lo, y_lo], color=ink, lw=1.4,
@@ -802,7 +802,7 @@ def _draw_stratigraphy_band(ax, base_fs):
 
 def _draw_age_axis(ax, base_fs):
     """v15: the figure's ONE shared age axis, in its own slim row at the
-    very bottom (user 2026-09-27: "数轴不在下面" — the age numbers must
+    very bottom (user 2026-09-27: "axis belongs at the bottom" — the age numbers must
     sit under the whole figure). Westerhold p2 geomag-bar style: black
     line, major/minor ticks pointing DOWN from it, numbers under the
     ticks, unit centred below. The GTS band on top is now a pure bar and

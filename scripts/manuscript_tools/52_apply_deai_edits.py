@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from docx import Document  # noqa: E402
-from _docx_edit import replace_everywhere  # noqa: E402
+from docx_edit import replace_everywhere  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 

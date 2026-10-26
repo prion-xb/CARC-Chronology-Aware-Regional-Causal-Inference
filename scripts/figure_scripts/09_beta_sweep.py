@@ -32,8 +32,8 @@ Convergence targets (asserted):
   robustness max over the 9 beta x edge cells < 0.07; 0/30 passes per beta
 
 Usage:
-    python scripts/fignew/09_beta_sweep.py
-Outputs: figures_new/09_beta_sweep/beta_sweep.png / .svg
+    python scripts/figure_scripts/09_beta_sweep.py
+Outputs: figures_rebuilt/09_beta_sweep/beta_sweep.png / .svg
 """
 from __future__ import annotations
 
@@ -53,7 +53,7 @@ for p in (os.path.dirname(os.path.abspath(__file__)), ROOT):
 from style import (apply_paleo_style, save, INK,  # noqa: E402
                    SECONDARY_INK, CAT1, CAT2, CAT3, CAT5)
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "09_beta_sweep")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "09_beta_sweep")
 
 BETA_SWEEP = (0.15, 0.25, 0.35)        # implemented Scenario A betas
 BETA_CANONICAL = 0.25

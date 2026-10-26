@@ -68,9 +68,6 @@ Columns:
 - **Tier 2** (silver): Composite ≥ 3.0, has event data
 - **Tier 3** (bronze): All other valid records
 
-#### `record_quality_score.csv`
-Earlier version of record quality metrics (subset of above, simplified columns).
-
 #### `NGRIP_trend_800ka.csv`
 Pre-computed millennial-scale trend of NGRIP δ¹⁸O used as the ARC common-forcing proxy.
 2 columns: `age` (ka), `trend` (standardized).

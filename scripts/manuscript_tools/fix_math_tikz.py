@@ -34,14 +34,14 @@ rep("""  Fonts: Arial (repo convention, see AI_EDITING.md). Math is Unicode text
   with baseline-shifted sub/superscripts so it stays editable in Illustrator.
   Rare glyphs: double-struck E (U+1D53C) and combining tilde/circumflex may
   need a font with good math coverage on AI import (Segoe UI Symbol / Cambria
-  Math) - see AI_EDITING.md section 六.""",
+  Math) - see AI_EDITING.md section 6.""",
 """  Fonts: Arial (repo convention, see AI_EDITING.md). Math is Unicode text
   with baseline-shifted sub/superscripts so it stays editable in Illustrator.
   Accents (tilde/hat) are explicit floating glyphs (U+02DC / U+02C6 in dy/dx
   shifted tspans) - NOT combining marks, which render misplaced in the VS
   Code preview and on AI import. Board/script glyphs (U+1D53C / U+1D4A9 /
   U+1D4A2) carry font-family=\"""" + CM + """\".
-  Layout follows the compiled 流程图.md (MiKTeX + dvisvgm, kept in
+  Layout follows the compiled flow_diagram_tikz.md (MiKTeX + dvisvgm, kept in
   figures/_tikz_gt/): theory titles wrap exactly as TeX breaks them, L3
   shows the F-statistic as a stacked fraction with a bar, L4 a small
   stacked 1/M fraction with Sigma side limits.""")

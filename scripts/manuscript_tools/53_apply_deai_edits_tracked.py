@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from docx import Document  # noqa: E402
-from _docx_edit import iter_paragraphs, replace_in_paragraph  # noqa: E402
+from docx_edit import iter_paragraphs, replace_in_paragraph  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 EMDASH = "—"

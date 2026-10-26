@@ -36,8 +36,8 @@ Convergence targets (asserted):
   0.07 vs 0.41
 
 Usage:
-    python scripts/fignew/11_layer1_stacking.py
-Outputs: figures_new/11_layer1_stacking/layer1_stacking.png / .svg
+    python scripts/figure_scripts/11_layer1_stacking.py
+Outputs: figures_rebuilt/11_layer1_stacking/layer1_stacking.png / .svg
 """
 from __future__ import annotations
 
@@ -69,7 +69,7 @@ SPEC = importlib.util.spec_from_file_location(
 stackviz = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(stackviz)
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "11_layer1_stacking")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "11_layer1_stacking")
 
 SMOOTH_SIGMA = 0.5                     # ka, Gaussian low-pass (scripts/18/33)
 MEMBER = "#b9b8b0"                     # thin member lines (scripts/33)

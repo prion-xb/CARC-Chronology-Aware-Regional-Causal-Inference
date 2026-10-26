@@ -39,7 +39,7 @@ from style import (Figure, apply_paleo_style, save,  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__)))))
-OUT = os.path.join(ROOT, "figures_new", "demos")
+OUT = os.path.join(ROOT, "figures_rebuilt", "demos")
 
 # ------------------------------------------------------------- parameters ---
 RECORD_ID = "NGRIP_d18O"

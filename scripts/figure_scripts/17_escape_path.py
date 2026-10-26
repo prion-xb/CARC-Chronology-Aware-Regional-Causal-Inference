@@ -39,8 +39,8 @@ Convergence targets (asserted):
   0 controls pass anywhere; Table 1 ratios 1.1 / 0.9 / 12.1
 
 Usage:
-    python scripts/fignew/17_escape_path.py
-Outputs: figures_new/17_escape_path/escape_path.png / .svg
+    python scripts/figure_scripts/17_escape_path.py
+Outputs: figures_rebuilt/17_escape_path/escape_path.png / .svg
 """
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ from style import (apply_paleo_style, honesty_ladder, save, INK,  # noqa: E402
                    SECONDARY_INK, CAT1, CAT3, CAT5, THR_95)
 from src.config import OUTPUT_DIR  # noqa: E402
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "17_escape_path")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "17_escape_path")
 
 FIG_W, FIG_H = 178.0, 192.0
 AX_L, AX_R = 0.075, 0.985

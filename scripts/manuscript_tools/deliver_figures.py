@@ -1,6 +1,6 @@
 """Deliver the QA-passed figures into the CARC_final2 submission package.
 
-Copies each rendered figure to Figures/正文 or Figures/supplementary under
+Copies each rendered figure to Figures/Main_text or Figures/supplementary under
 the journal file names (Fig1.pdf … Fig7.tif, FigS1.png … FigS10.tif), then
 runs the acceptance checks:
 
@@ -19,8 +19,8 @@ import shutil
 import sys
 
 REPO = r"D:\PythonWorkSpace\pythonProject5\CARC_submit\figures"
-PKG = r"D:\PythonWorkSpace\pythonProject6\二\CARC_final2\Figures"
-MAIN = os.path.join(PKG, "正文")
+PKG = os.environ.get("CARC_FIG_PKG_DIR") or r"D:\PythonWorkSpace\CARC_final2\Figures"
+MAIN = os.path.join(PKG, os.environ.get("CARC_FIG_MAIN_DIR", "Main_text"))
 SUPP = os.path.join(PKG, "supplementary")
 BACKUP = os.path.join(PKG, "_backup_orig")
 
@@ -112,7 +112,7 @@ def check(dst_dir, manifest):
 
 
 def main():
-    print("== 正文 ==")
+    print("== Main text ==")
     install(MAIN, MAIN_MANIFEST)
     print("== supplementary ==")
     install(SUPP, SUPP_MANIFEST)

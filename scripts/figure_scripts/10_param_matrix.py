@@ -37,8 +37,8 @@ Convergence targets (asserted):
     all have control FPR >= 0.78
 
 Usage:
-    python scripts/fignew/10_param_matrix.py
-Outputs: figures_new/10_param_matrix/param_matrix.png / .svg
+    python scripts/figure_scripts/10_param_matrix.py
+Outputs: figures_rebuilt/10_param_matrix/param_matrix.png / .svg
 """
 from __future__ import annotations
 
@@ -57,7 +57,7 @@ for p in (os.path.dirname(os.path.abspath(__file__)), ROOT):
 
 from style import save, INK, SURFACE  # noqa: E402
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "10_param_matrix")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "10_param_matrix")
 
 # pipeline axes: (row label, grid column, option display labels)
 AXES = [

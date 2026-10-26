@@ -6,8 +6,8 @@ This is the building block the whole paper stands on: every CARC analysis
 starts from (age, value) pairs plus an error on the ages.
 
 Usage:
-    python scripts/fignew/01_basic_record.py               # NGRIP d18O
-    python scripts/fignew/01_basic_record.py Lapa_d18O     # any record ID
+    python scripts/figure_scripts/01_basic_record.py               # NGRIP d18O
+    python scripts/figure_scripts/01_basic_record.py Lapa_d18O     # any record ID
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from style import setup_axes, save, INK, BAND, BAND_EDGE  # noqa: E402
 from data_io import read_record, read_error, error_on_ages  # noqa: E402
 
 OUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__)))), "figures_new", "01_basic_record")
+    os.path.abspath(__file__)))), "figures_rebuilt", "01_basic_record")
 
 
 def main(record_id: str = "NGRIP_d18O"):

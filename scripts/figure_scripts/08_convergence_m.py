@@ -30,8 +30,8 @@ Convergence targets (asserted):
   TPR >= 0.95 and FPR <= 0.30 at every M.
 
 Usage:
-    python scripts/fignew/08_convergence_m.py
-Outputs: figures_new/08_convergence_m/convergence_m.png / .svg
+    python scripts/figure_scripts/08_convergence_m.py
+Outputs: figures_rebuilt/08_convergence_m/convergence_m.png / .svg
 """
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ for p in (os.path.dirname(os.path.abspath(__file__)), ROOT):
 from style import (apply_paleo_style, honesty_ladder, save, INK,  # noqa: E402
                    SECONDARY_INK, CAT1, CAT2)
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "08_convergence_m")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "08_convergence_m")
 
 RUN_ALPHA, RUN_SIGMA = 0.5, 0.05       # operating point (canonical run22f)
 M_VALS = (50, 100, 200, 400)           # chronology perturbations per edge

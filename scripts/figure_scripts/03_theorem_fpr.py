@@ -26,10 +26,10 @@ n = 100) the bound is 34.4% (the "~35%" quoted in Section 5.1).
 Note: a faithful Monte Carlo of model (1)-(2) yields noncentrality ~20%
 below eq. 4 (eq. 4 approximates Cov(X_{t-1}, Z_t) by beta gamma_Z / (1-phi^2)
 and the residual variance by sigma_eps^2); simulations therefore stay out of
-this figure (see the 攻关题 8 exercise for the numerical check).
+this figure (see problem exercise 8 in the study notes for the numerical check).
 
 Usage:
-    python scripts/fignew/03_theorem_fpr.py
+    python scripts/figure_scripts/03_theorem_fpr.py
 """
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ from style import (apply_paleo_style, save, INK, SECONDARY_INK,  # noqa: E402
                    CAT1, THR_95)
 
 OUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__)))), "figures_new", "03_theorem_fpr")
+    os.path.abspath(__file__)))), "figures_rebuilt", "03_theorem_fpr")
 
 # manuscript "typical paleoclimate parameters" (Section 5.1, scripts/30)
 PHI = 0.55          # AR(1) coefficient of both records

@@ -13,7 +13,7 @@ cluster centroids; the scattered High-Latitude Lakes group has no
 geographic label (legend chip only).
 
 Usage:
-    python scripts/fignew/18_data_map.py
+    python scripts/figure_scripts/18_data_map.py
 """
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ import cartopy.feature as cfeature    # noqa: E402
 from style import (apply_paleo_style, save, INK, SECONDARY_INK, GRID,  # noqa: E402
                    REGION_CATS, REGION_ORDER, SURFACE)
 
-OUT_DIR = os.path.join(ROOT, "figures_new", "18_data_map")
+OUT_DIR = os.path.join(ROOT, "figures_rebuilt", "18_data_map")
 
 FIG_W, FIG_H = 178.0, 106.0          # print size, mm
 

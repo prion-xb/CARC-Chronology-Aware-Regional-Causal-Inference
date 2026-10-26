@@ -52,8 +52,7 @@ Tables/
 # Generated output (not tracked — run scripts to regenerate)
 outputs/
 figures/
-figures_new/
-示例图/
+figures_rebuilt/
 
 # Large binary / non-code files
 *.pdf

@@ -18,7 +18,7 @@ Every table in the paper is produced by a script in `scripts/` (the numbered
 01–45 series; `scripts/figure_tools/` and `scripts/manuscript_tools/` hold
 auxiliary figure/manuscript tooling outside the reproduction map). The full
 product-to-script map, run instructions, and known caveats are in
-[README_复现指南.md](README_复现指南.md). Summary:
+[REPRODUCTION.md](REPRODUCTION.md). Summary:
 
 | Paper result | Script | On-disk output (after a run) |
 | :--- | :--- | :--- |
@@ -73,7 +73,7 @@ python main.py --method granger      # Standard Granger instead of CARC
 ├── proxy_records/          # 83 proxy record data files (80 CSV + 3 XLSX)
 ├── proxy_errors/           # Age-model error files per record
 ├── data/                   # Tier assignments, quality scores, orbital forcing
-├── scripts/                # Numbered analysis drivers 01–45 + fignew/ figure rebuilds
+├── scripts/                # Numbered analysis drivers 01–45 + figure_scripts/ figure rebuilds
 │   ├── figure_tools/       # Figure-port / QA utilities (outside the reproduction map)
 │   └── manuscript_tools/   # Docx assembly tools (require the manuscript, not shipped)
 ├── Tables/                 # Paper tables (xlsx; git-ignored until publication, shipped in the submission package)
@@ -96,7 +96,7 @@ python main.py --method granger      # Standard Granger instead of CARC
 │   ├── visualization.py    # Publication-quality plotting utilities
 │   ├── geolocation.py      # Record coordinates and regional metadata
 │   └── ...
-├── README_复现指南.md      # Full table → script reproduction map (中文)
+├── REPRODUCTION.md         # Full table → script reproduction map
 ├── requirements.txt
 ├── pyproject.toml
 └── LICENSE
