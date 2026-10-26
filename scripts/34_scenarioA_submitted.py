@@ -493,7 +493,7 @@ def main():
         rows.append({
             'causal_edge': f'{driver} -> {target}',
             'true_lag_ka': lag_ka,
-            'lag_error_ratio': round(lag_ka / sigma_drv, 1),
+            'lag_error_ratio': round(lag_ka / rms, 1),
             'robustness_no_error': noerr,
             'robustness_with_error': err,
             'passes_95': err >= 0.95,
