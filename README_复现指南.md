@@ -23,6 +23,10 @@
 | Table S2/S4（记录账目） | `scripts/01_preprocess_data.py` + `data/data_tiers_final.csv` | — | `data/` |
 | Table S5（全对扫描） | `scripts/19_full_pairwise_scan.py`（standard + nonoise/noage/noarc/alldiff 消融，分片续跑） | — | `outputs/pairwise_scan/` |
 | Table S6 / Fig.5（审查） | `scripts/41_scrutinization_figure.py` | — | `outputs/table_s6_scrutiny_profile.csv` |
+| Table S7（理论 FPR 剖面 + α×τ 门矩阵） | `scripts/42_theory_fpr_table.py` | — | `outputs/tableS7_fpr_profile.csv` / `outputs/tableS7_binomial_gate.csv` |
+| β=0.25 反解锚点（§4.1 / 附录 S4.1） | `scripts/43_pairwise_beta_inversion.py` | — | `outputs/beta_inversion_pairs.csv` |
+| Theorem 2 数值例 MC 验证（§2.2） | `scripts/44_theorem2_montecarlo.py` | — | `outputs/theorem2_mc_verification.csv` |
+| Fig. 2(a) MC FPR 曲线（§2.2） | `scripts/45_fig2a_fpr_sweep.py` | — | `outputs/fig2a_mc_sweep.csv` |
 | §5.3 误差压缩 | `scripts/24_age_error_scaling.py` | — | `outputs/age_error_scaling*.csv` |
 | 滑窗 Fig.7 | `scripts/15_sliding_window_carc.py` | — | — |
 | Scenario B | （论文已删，保持删除） | `scripts/38_scenarioB_zzf.py` | `outputs/scenarioB_zzf_tableS6.csv` |

@@ -114,7 +114,7 @@ def main():
         mc_fpr[a] = mc
         print('  %d%% confidence (alpha=%.2f): FPR = %.2f%%' % (
             round((1 - a) * 100), a, mc))
-    print('  anchor (alpha=0.05) equals the 15.93%% reproduced by 44/45.')
+    print('  anchor (alpha=0.05) equals the 15.93% reproduced by 44/45.')
 
     # ---------------- save Table S7 profile ----------------
     with open(os.path.join(OUTPUT_DIR, 'tableS7_fpr_profile.csv'),
