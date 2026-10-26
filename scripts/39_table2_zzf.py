@@ -32,7 +32,9 @@ the decision rules below are documented rebuild choices:
     and rho(drv | M_tgt) rises with libSize        (convergence signature)
   * PCMCI: tigramite 5.x ParCorr, one system-wide run per draw
     (6 variables), tau_max = 5, pc_alpha = 0.05; drv->tgt significant iff
-    min over tau of p_matrix[tgt, drv, tau] < 0.05 (FDR inside PCMCI).
+    min over tau of p_matrix[tgt, drv, tau] < 0.05
+    (pc_alpha is a per-condition independence level inside PCMCI,
+    not FDR control).
 
 Robustness = fraction of the 200 draws with a significant edge; reported
 as the median over 5 realizations (runtime constraint; documented).
