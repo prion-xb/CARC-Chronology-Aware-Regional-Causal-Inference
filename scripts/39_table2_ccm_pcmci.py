@@ -216,7 +216,7 @@ def main():
             })
         ctl = [float(np.median(acc[p])) for p in ALL_CTL]
         all_rows.append({
-            'tester': tester, 'causal_edge': '12 negative controls',
+            'tester': tester, 'causal_edge': '27 negative controls',
             'true_lag_ka': np.nan, 'lag_error_ratio': np.nan,
             'robustness': max(ctl),
             'robustness_min': min(ctl),
