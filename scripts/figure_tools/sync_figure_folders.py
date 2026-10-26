@@ -17,7 +17,7 @@ Each folder contains a README.md with a one-line explanation and editing
 notes per figure. Re-run this script after any figure is regenerated to
 re-sync the curated copies:
 
-  python scripts/sync_figure_folders.py
+  python scripts/figure_tools/sync_figure_folders.py
 
 Files whose stem starts with _tmp_ (layout scratch) are never copied.
 """
@@ -26,7 +26,7 @@ import os
 import shutil
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 from src.config import FIGURE_DIR
 
 EXTS = ('.png', '.pdf', '.svg', '.tif')

@@ -3,9 +3,9 @@
 qa_figures.py — run any figure script under the layout QA hook.
 
 Usage:
-    python scripts/qa_figures.py scripts/17_regional_pairwise_matrix.py
-    QA_NO_SAVE=1 python scripts/qa_figures.py scripts/17_regional_pairwise_matrix.py
-    python scripts/qa_figures.py --summary
+    python scripts/figure_tools/qa_figures.py scripts/17_regional_pairwise_matrix.py
+    QA_NO_SAVE=1 python scripts/figure_tools/qa_figures.py scripts/17_regional_pairwise_matrix.py
+    python scripts/figure_tools/qa_figures.py --summary
 
 The target script is executed unchanged; every ``fig.savefig`` is intercepted
 and inspected for overlapping text, out-of-canvas text, colliding axes and
@@ -17,7 +17,7 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, ".."))
+sys.path.insert(0, os.path.join(HERE, "..", ".."))
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

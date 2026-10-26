@@ -7,7 +7,7 @@ text-editable SVG sibling for every .png it saves, for the Adobe Illustrator
 editing workflow (see AI_EDITING.md).
 
 Usage:
-  python scripts/export_layered_svg.py scripts/13_publication_figures.py [args...]
+  python scripts/figure_tools/export_layered_svg.py scripts/13_publication_figures.py [args...]
 
 This is the *final regeneration* entry point: every figure the script saves
 is (1) checked for text overlap / clipping by src.layout_qa (report written
@@ -22,7 +22,7 @@ import os
 import runpy
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 import matplotlib
 import matplotlib.figure

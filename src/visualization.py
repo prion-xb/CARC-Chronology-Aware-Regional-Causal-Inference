@@ -68,7 +68,7 @@ def apply_style(context: str = "paper", font_scale: float = 1.0):
         "savefig.dpi": 300,
         # NOTE: fixed canvas (no tight bbox). Tight cropping makes margins
         # figure-dependent and shifts panels relative to each other; layout
-        # QA (scripts/qa_figures.py) relies on the fixed canvas. Panels that
+        # QA (scripts/figure_tools/qa_figures.py) relies on the fixed canvas. Panels that
         # stick out are reported as text_outside instead of silently
         # re-cropping the figure.
         "savefig.bbox": None,

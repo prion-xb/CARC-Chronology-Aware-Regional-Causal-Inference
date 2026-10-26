@@ -8,7 +8,7 @@ figure boundary (catches clipping / tight-bbox surprises).
 
 Usage (no changes needed in the target script)::
 
-    python scripts/qa_figures.py scripts/17_regional_pairwise_matrix.py
+    python scripts/figure_tools/qa_figures.py scripts/17_regional_pairwise_matrix.py
 
 Report lines are JSON, one per issue, appended to the report file, e.g.::
 

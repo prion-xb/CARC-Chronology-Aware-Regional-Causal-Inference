@@ -20,7 +20,7 @@ Usage (direct)::
     from src.svg_export import save_layered_svg
     save_layered_svg(fig, 'figures/Fig1_Global_Proxy_Map.svg')
 
-or run any figure script through scripts/export_layered_svg.py, which
+or run any figure script through scripts/figure_tools/export_layered_svg.py, which
 emits an .svg sibling for every .png the script saves.
 """
 
@@ -238,7 +238,7 @@ def save_layered_svg(fig, path, layer_order=None, **save_kwargs):
     class layers: tag artists with ``artist.set_gid('layer-<name>-...')``
     and pass the layer names (bottom to top) in *layer_order*, or set
     ``fig._svg_layer_order`` — the export wrapper
-    (``scripts/export_layered_svg.py``) reads the figure attribute
+    (``scripts/figure_tools/export_layered_svg.py``) reads the figure attribute
     automatically.
 
     ``save_kwargs`` are passed through to ``fig.savefig`` (e.g.

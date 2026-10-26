@@ -6,10 +6,10 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.dirname(HERE))
+sys.path.insert(0, os.path.join(HERE, '..', '..'))
 
 spec = importlib.util.spec_from_file_location(
-    'pubfigs', os.path.join(HERE, '13_publication_figures.py'))
+    'pubfigs', os.path.join(HERE, '..', '13_publication_figures.py'))
 m = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
 
