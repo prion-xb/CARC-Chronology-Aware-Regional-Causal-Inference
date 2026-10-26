@@ -68,8 +68,7 @@ def classify_record(filename):
                                  'jouzel', 'bereiter', 'neem', 'ch4 over past']):
         region = 'Antarctic'
     elif any(k in name for k in ['odp1090', 'odp1094', 'u1537', 'ps75',
-                                 'md97-2021', 'md00-2361', 'jaccard',
-                                 'log fe-ca', 'log zr-fe']):
+                                 'md97-2021', 'jaccard']):
         region = 'Southern_Ocean'
     # North Atlantic & Nordic Seas
     elif any(k in name for k in ['ngrip', 'odp983', 'odp980', 'u1302', 'u1308',
@@ -91,6 +90,7 @@ def classify_record(filename):
                                  'g.ruber', 'g_ruber', 'd18og.rub', 'md2622', 'clemens', 'naafs',
                                  'ohc-stack', 'malawi', 'odp 184',
                                  'ln k-al', 'ln ti-ca',
+                                 'md00-2361', 'log fe-ca', 'log zr-fe',
                                  'sst=0-2.7', 'ba=128', 'br.csv']):
         region = 'Tropical'
     # South America

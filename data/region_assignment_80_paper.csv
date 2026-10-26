@@ -1,4 +1,4 @@
-Record,Tier,Region,Basis,S2_File_IDs
+﻿Record,Tier,Region,Basis,S2_File_IDs
 NGRIP_d18O,Tier 1,North_Atlantic,S4_named,Erhardt_NGRIP_aerosol_d18O_step1
 ODP983_IRD,Tier 1,North_Atlantic,S4_named,2_ODP983-IRD
 ODP983_NPS,Tier 2,North_Atlantic,S4_named,2_Barker 2019-NPS
@@ -24,9 +24,9 @@ PS75-076-2_Fe,Tier 3,Antarctic_SouthernOcean,S4_named,29_PS75_076-2_Fe=0-800
 PS75-074-3_Fe,Tier 3,Antarctic_SouthernOcean,S4_named,30_PS75_074-3_Fe=0-800
 U1537_NGR,Tier 3,Antarctic_SouthernOcean,S4_named,31_U1537-NGR
 U1537_MS_AR,Tier 2,Antarctic_SouthernOcean,S4_named,31_U1537_MS AR
-MD00-2361_d18O,Tier 2,Antarctic_SouthernOcean,geography,23-1_MD00-2361-d18O
-MD00-2361_logFeCa,Tier 2,Antarctic_SouthernOcean,geography,23-1_log Fe-Ca=800ka
-MD00-2361_logZrFe,Tier 2,Antarctic_SouthernOcean,geography,23-1_log Zr-Fe=800ka
+MD00-2361_d18O,Tier 2,Tropical,geography,23-1_MD00-2361-d18O
+MD00-2361_logFeCa,Tier 2,Tropical,geography,23-1_log Fe-Ca=800ka
+MD00-2361_logZrFe,Tier 2,Tropical,geography,23-1_log Zr-Fe=800ka
 MD97-2120_d18O,Tier 2,Antarctic_SouthernOcean,geography,26_MD97-2021_d18O_Plank-TD
 Cariaco_Mo,Tier 1,Tropical,S4_named,16_MD2622ODP1002-Mo
 U1542_SST,Tier 2,Tropical,S4_named,26-1_383-U1542_SST

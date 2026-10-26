@@ -1,4 +1,4 @@
-Record,Tier,Region,Basis
+﻿Record,Tier,Region,Basis
 Baikal_BioSilica,Tier 3,HighLat_Lakes,S4_named
 Botuvera_d13C,Tier 2,South_America,S4_named
 Botuvera_d18O,Tier 2,South_America,S4_named
@@ -28,9 +28,9 @@ Luochuan_GT32,Tier 3,East_Asian_Monsoon,geography
 Luochuan_grain,Tier 3,East_Asian_Monsoon,geography
 M125-73-3_lnKAl,Tier 2,South_America,S4_named
 M125-73-3_lnTiCa,Tier 2,South_America,S4_named
-MD00-2361_d18O,Tier 2,Antarctic_SouthernOcean,geography
-MD00-2361_logFeCa,Tier 2,Antarctic_SouthernOcean,geography
-MD00-2361_logZrFe,Tier 2,Antarctic_SouthernOcean,geography
+MD00-2361_d18O,Tier 2,Tropical,geography
+MD00-2361_logFeCa,Tier 2,Tropical,geography
+MD00-2361_logZrFe,Tier 2,Tropical,geography
 MD01-2443_CaTi,Tier 2,North_Atlantic,S4_named
 MD01-2443_UK37_SST,Tier 2,North_Atlantic,S4_named
 MD01-2518_DSR,Tier 2,Tropical,geography
