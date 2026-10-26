@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-39_table2_zzf.py
+39_table2_ccm_pcmci.py
 ----------------
 Table 2 rebuild: Scenario A with CCM and PCMCI as alternative Layer-3
 causal testers (paper Section 4.1, Table 2).
@@ -40,12 +40,12 @@ Robustness = fraction of the 200 draws with a significant edge; reported
 as the median over 5 realizations (runtime constraint; documented).
 
 Outputs:
-  outputs/table2_zzf_ccm_pcmci.csv      per-edge robustness x tester
-  outputs/table2_zzf_ccm_pcmci_full.csv all 30 directed cells
+  outputs/table2_ccm_pcmci.csv      per-edge robustness x tester
+  outputs/table2_ccm_pcmci_full.csv all 30 directed cells
 
 Usage:
-  python scripts/39_table2_zzf.py --quick   # 1 realization x 20 draws
-  python scripts/39_table2_zzf.py           # full run (5 x 200)
+  python scripts/39_table2_ccm_pcmci.py --quick   # 1 realization x 20 draws
+  python scripts/39_table2_ccm_pcmci.py           # full run (5 x 200)
 """
 
 import os, sys, argparse, warnings, importlib.util
@@ -59,7 +59,7 @@ from scipy.spatial import cKDTree
 from src.config import OUTPUT_DIR
 
 _spec = importlib.util.spec_from_file_location(
-    'reg34', os.path.join(os.path.dirname(__file__), '34_scenarioA_zzf.py'))
+    'reg34', os.path.join(os.path.dirname(__file__), '34_scenarioA_submitted.py'))
 reg34 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(reg34)
 
@@ -159,7 +159,7 @@ def pcmci_links(residuals):
 def run_realization(seed, n_perturb, sigma_map, span, tester):
     counts = {(v1, v2): 0 for v1 in reg34.VAR_ORDER for v2 in reg34.VAR_ORDER
               if v1 != v2}
-    data, t, Z = reg34.generate_zzf(seed, False, span=span)
+    data, t, Z = reg34.generate_submitted(seed, False, span=span)
     rng = np.random.default_rng(seed * 1000 + 7)
     for _ in range(n_perturb):
         raw = {v: data[v][np.argsort(t + rng.normal(0, sigma_map[v], len(t)))]
@@ -225,7 +225,7 @@ def main():
         })
 
     df = pd.DataFrame(all_rows)
-    out_csv = os.path.join(OUTPUT_DIR, 'table2_zzf_ccm_pcmci.csv')
+    out_csv = os.path.join(OUTPUT_DIR, 'table2_ccm_pcmci.csv')
     df.to_csv(out_csv, index=False)
     print(f"\nSaved: {out_csv}\n")
     print(df.to_string(index=False))

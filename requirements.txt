@@ -16,7 +16,7 @@ cartopy>=0.22.0
 # Data I/O
 openpyxl>=3.1.0
 
-# Table 2 reproduction (scripts/39_table2_zzf.py, PCMCI tester)
+# Table 2 reproduction (scripts/39_table2_ccm_pcmci.py, PCMCI tester)
 tigramite>=5.0
 
 # Optional: CCM cross-validation reference (src/validation.py)

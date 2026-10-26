@@ -29,7 +29,7 @@ Machinery per method, exactly as the paper's tables:
   Granger: scripts/22 gen_scenario + realization_block, run22f config
            (alpha=0.5, force, aic_f, test_joint, maxlag=50), 20 x 200,
            seeds 42+r, beta=0.25, params from scenarioA_final_params.csv
-  CCM/PCMCI: scripts/34 ZZF generator + scripts/39 numpy-CCM / tigramite
+  CCM/PCMCI: scripts/34 submitted generator + scripts/39 numpy-CCM / tigramite
            PCMCI decision rules, 20 x 200, span 10-58 ka, per-draw
            perturbation (paper Section 3.4 order)
 Strength is swept by setting the generator module attribute
@@ -75,7 +75,7 @@ CANONICAL_C = 0.4
 SNR_GRID = (0.5, 1.0, 1.5, 2.0, 3.0, 5.0)
 STRENGTHS = tuple(round(s * CANONICAL_C, 2) for s in SNR_GRID)
 BETA = 0.25
-SPAN_ZZF = 58.0
+SPAN_SUBMITTED = 58.0
 CFG = (0.5, "force", "aic_f", "test_joint", 50)      # canonical run22f
 
 METHODS = ("Granger", "CCM", "PCMCI")
@@ -84,7 +84,7 @@ METHOD_MARKERS = {"Granger": "o", "CCM": "s", "PCMCI": "^"}
 
 # paper anchors: Table 1 beta=0.25 (Granger) and Table 2 (CCM/PCMCI);
 # verified against outputs/scenarioA_final_table1_full_beta0.25.csv and
-# outputs/table2_zzf_ccm_pcmci.csv
+# outputs/table2_ccm_pcmci.csv
 PAPER_ERR = {
     "Granger": {("NGRIP", "EDC_dD"): 0.060, ("CO2", "CH4"): 0.065,
                 ("Cariaco", "Cheng"): 0.045},
@@ -150,13 +150,13 @@ def granger_cell(c, n_real, n_pert):
             "noerr_hits": {f"{a} -> {b}": v for (a, b), v in noerr_hits.items()}}
 
 
-def zzf_cell(c, tester, n_real, n_pert):
+def submitted_cell(c, tester, n_real, n_pert):
     """One strength cell for CCM/PCMCI: 39's rebuild machinery, exactly the
     paper Table 2 procedure (per-draw perturbation of the raw series, then
     Layer 2 keep).  Imported lazily so tigramite never enters the pickle
     of a Granger cell; 39 keeps its own internal 34, so the strength must
     be set on reg39.reg34."""
-    reg39 = _load("reg39", "39_table2_zzf.py")
+    reg39 = _load("reg39", "39_table2_ccm_pcmci.py")
     reg39.reg34.CAUSAL_STRENGTH = float(c)
     reg34 = reg39.reg34
     sigma_map = dict(reg34.S1_PARAMS["age"])
@@ -165,11 +165,11 @@ def zzf_cell(c, tester, n_real, n_pert):
     noerr_hits = {p: 0 for p in pairs}
     for r in range(n_real):
         seed = 42 + r
-        rob = reg39.run_realization(seed, n_pert, sigma_map, SPAN_ZZF, tester)
+        rob = reg39.run_realization(seed, n_pert, sigma_map, SPAN_SUBMITTED, tester)
         for p in pairs:
             err[p].append(rob[p])
         # error-free ceiling: same pipeline, no per-draw perturbation
-        data, t, Z = reg34.generate_zzf(seed, False, span=SPAN_ZZF)
+        data, t, Z = reg34.generate_submitted(seed, False, span=SPAN_SUBMITTED)
         ps = reg34.layer2(data, mode="keep", alpha=reg34.ARC_ALPHA, Z=Z)
         rng = np.random.default_rng(seed * 1000 + 7)
         if tester == "CCM":
@@ -187,7 +187,7 @@ def zzf_cell(c, tester, n_real, n_pert):
 def _cell(method, c, n_real, n_pert, persist):
     print(f"[cell] {method} strength={c} start", flush=True)
     out = (granger_cell(c, n_real, n_pert) if method == "Granger"
-           else zzf_cell(c, method, n_real, n_pert))
+           else submitted_cell(c, method, n_real, n_pert))
     if persist:
         tmp = _ckpt(method, c) + ".tmp"
         with open(tmp, "w", encoding="utf-8") as fh:

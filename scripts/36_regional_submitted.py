@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-36_regional_zzf.py
+36_regional_submitted.py
 ------------------
-ZZF-pipeline regional stacking + robustness (paper Section 4.3), plus the
+submitted-pipeline regional stacking + robustness (paper Section 4.3), plus the
 record-level Lapa -> ODP983 pairing and the P4 error-scaling analysis
 (paper Section 5.3: compress the 1sigma errors to ~35% -> 95% robustness).
 
@@ -51,14 +51,14 @@ scales {1.0..0.2} x sigma and reports the first scale whose robustness
 reaches 95% (paper: about 0.35).
 
 Outputs:
-  outputs/regional_zzf_windows.csv       region pairs x windows robustness
-  outputs/lapa_odp983_zzf.csv            record-level pairing, 6 windows
+  outputs/regional_submitted_windows.csv       region pairs x windows robustness
+  outputs/lapa_odp983.csv            record-level pairing, 6 windows
   outputs/lapa_odp983_scaling.csv        P4 error-scaling sweep (H1)
 
 Usage:
-  python scripts/36_regional_zzf.py --quick       # 3 windows x 30 draws
-  python scripts/36_regional_zzf.py               # full run (min-p, Sec 4.3)
-  python scripts/36_regional_zzf.py --test lagonly  # Table 4 semantics
+  python scripts/36_regional_submitted.py --quick       # 3 windows x 30 draws
+  python scripts/36_regional_submitted.py               # full run (min-p, Sec 4.3)
+  python scripts/36_regional_submitted.py --test lagonly  # Table 4 semantics
 """
 
 import os, sys, re, argparse, warnings
@@ -275,7 +275,7 @@ def draw_deconfound(regions, ngrip_trend, rng, na_proxy_mode,
 def run_analysis(n_draws, windows, rng, na_proxy_mode='ngrip1k',
                  do_scaling=False, test='minp',
                  assignment='region_assignment_91_proposed.csv',
-                 na_raw=False, obs_noise=False, out_name='regional_zzf_windows',
+                 na_raw=False, obs_noise=False, out_name='regional_submitted_windows',
                  do_lapa=True, na_proxy_smooth='1k'):
     rec2file = _build_record_file_map()
     assign = pd.read_csv(os.path.join('data', assignment))
@@ -359,7 +359,7 @@ def run_analysis(n_draws, windows, rng, na_proxy_mode='ngrip1k',
         pair_rows = record_pair_windows(lapa[0], odp[0], ngrip_trend,
                                         windows, n_draws, rng, test=test)
         pdf = pd.DataFrame(pair_rows)
-        pdf.to_csv(os.path.join(OUTPUT_DIR, 'lapa_odp983_zzf.csv'),
+        pdf.to_csv(os.path.join(OUTPUT_DIR, 'lapa_odp983.csv'),
                    index=False)
         print("\nRecord-level Lapa -> ODP983 (sigma 0.39/0.50 ka):")
         for _, r in pdf.iterrows():
@@ -486,7 +486,7 @@ def main():
                     help='with --na-raw: smooth the NA composite proxy with '
                          '1-ka Gaussian (analogy to the six-record Layer 2) '
                          'or use the raw 0.5-ka NA stack (literal Sec 5.4)')
-    ap.add_argument('--out', default='regional_zzf_windows',
+    ap.add_argument('--out', default='regional_submitted_windows',
                     help='output basename under outputs/')
     ap.add_argument('--no-lapa', action='store_true',
                     help='skip the legacy record-level Lapa section')

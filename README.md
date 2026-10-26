@@ -21,7 +21,7 @@ product-to-script map, run instructions, and known caveats are in
 | Paper result | Script | On-disk output (after a run) |
 | :--- | :--- | :--- |
 | Table 1 (Scenario A, 20×200) | `scripts/22_scenarioA_final.py` | `outputs/scenarioA_final_table1.csv` |
-| Table 2 (CCM / PCMCI) | `scripts/39_table2_zzf.py` | `outputs/table2_zzf_ccm_pcmci.csv` |
+| Table 2 (CCM / PCMCI) | `scripts/39_table2_ccm_pcmci.py` | `outputs/table2_ccm_pcmci.csv` |
 | Table 4 / Table S4 (six climate windows, 180 directed cells) | `scripts/06_conditional_causality.py` | `outputs/conditional_causality_allpairs.csv` |
 | Table 5 (regional phase lags) | `scripts/08_regional_phase_lag.py` | — |
 | Table S5 (80-record pairwise scan + ablations) | `scripts/19_full_pairwise_scan.py` | `outputs/pairwise_scan/` |
@@ -45,7 +45,7 @@ python main.py --demo              # architecture demo, no data needed
 
 cd scripts
 python 22_scenarioA_final.py --quick     # Table 1 smoke (2×40)
-python 39_table2_zzf.py --quick          # Table 2 smoke (1×20)
+python 39_table2_ccm_pcmci.py --quick          # Table 2 smoke (1×20)
 ```
 
 Table 2 additionally requires `tigramite>=5.0` (PCMCI, `ParCorr`). The CCM

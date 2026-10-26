@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-35_table4_zzf.py
+35_table4_submitted.py
 ----------------
-Table 4 rebuild per the ZZF (final submitted) version of the paper:
+Table 4 rebuild per the final submitted version of the paper:
 directional robustness (%) of the three classical pairings across the six
-climate windows, using the full ZZF pipeline (scripts/34 machinery).
+climate windows, using the full submitted pipeline (scripts/34 machinery).
 
 Paper Table 4 targets (percent, M = 200 draws; current _edited manuscript):
          NGRIP->EDCdD  EDCdD->NGRIP  EDCdD->CO2  CO2->EDCdD  Car->Cheng  Cheng->Car
@@ -43,15 +43,15 @@ inside the window than the number of 0.05-ka grid steps; the two narrow
 (~2 ka) windows return 0.0 by construction (paper data-adequacy note).
 
 Outputs:
-  outputs/table4_zzf.csv          window x pairing x direction robustness
-  outputs/table4_zzf_vs_paper.csv side-by-side with the paper targets
-  outputs/tableS5_zzf.csv         --all-pairs: full 15-pair matrix
+  outputs/table4_submitted.csv          window x pairing x direction robustness
+  outputs/table4_submitted_vs_paper.csv side-by-side with the paper targets
+  outputs/tableS5_submitted.csv         --all-pairs: full 15-pair matrix
 
 Usage:
-  python scripts/35_table4_zzf.py --quick            # 3 windows x 20 draws
-  python scripts/35_table4_zzf.py                    # full run (fast, M=200)
-  python scripts/35_table4_zzf.py --all-pairs        # Table S5 matrix
-  python scripts/35_table4_zzf.py --diff forced --test chi2 --obs-noise
+  python scripts/35_table4_submitted.py --quick            # 3 windows x 20 draws
+  python scripts/35_table4_submitted.py                    # full run (fast, M=200)
+  python scripts/35_table4_submitted.py --all-pairs        # Table S5 matrix
+  python scripts/35_table4_submitted.py --diff forced --test chi2 --obs-noise
       # the current paper Section 3.4 spec run
 """
 
@@ -344,10 +344,10 @@ def main():
     if args.all_pairs:
         from itertools import combinations
         pairings = list(combinations(VAR_ORDER, 2))
-        out_name = 'tableS5_zzf.csv'
+        out_name = 'tableS5_submitted.csv'
     else:
         pairings = PAIRINGS
-        out_name = 'table4_zzf.csv'
+        out_name = 'table4_submitted.csv'
 
     rows = []
     for w in windows:

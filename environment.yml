@@ -16,5 +16,5 @@ dependencies:
   - pytest>=7.0
   - pip
   - pip:
-    - tigramite>=5.0  # Table 2 (PCMCI tester, scripts/39_table2_zzf.py)
+    - tigramite>=5.0  # Table 2 (PCMCI tester, scripts/39_table2_ccm_pcmci.py)
     # - pyEDM>=2.0  # optional: CCM cross-validation reference

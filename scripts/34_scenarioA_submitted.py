@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-34_scenarioA_zzf.py
+34_scenarioA_submitted.py
 -------------------
-Scenario A rebuild per the ZZF (final submitted) version of the paper.
+Scenario A rebuild per the final submitted version of the paper.
 
 Differences from scripts/21_scenarioA_table1.py (old version):
-  * span 10-58 ka (ZZF supplementary Table S1) instead of 10-60;
+  * span 10-58 ka (submitted supplementary Table S1) instead of 10-60;
   * Z = stationary Gaussian AR(1) (rho_F=0.6) + 25 D-O Gaussian pulses
     (width 0.4 ka, amplitude decay 1.2 ka); the 40-ka orbital sinusoid is
-    NOT part of the ZZF generator spec (--orbital re-adds it for probes);
+    NOT part of the submitted generator spec (--orbital re-adds it for probes);
   * Cariaco age error = 0.23 ka (measured median of the real record's
     per-point errors; the paper's Table S1 value 0.50 is a typo -- the
     paper's own lambda = lag/error column shows 2.3/0.23 = 10.0);
@@ -31,21 +31,21 @@ Pipeline (paper Section 3):
   Layer 4 : M = 200 chronology-perturbation realizations; robustness =
             fraction significant; honesty filter at 95%.
 
-Targets (ZZF Table 1):
+Targets (submitted Table 1):
   no-error   100% / 100% / 100%  +  controls 0%
   with-error ~70% / ~60% /  96%  +  controls 0%
   (edges NGRIP->EDC_dD, CO2->CH4, Cariaco->Cheng; lambda ~1.2 / ~0.9 / ~10.0)
 
 Outputs:
-  outputs/scenarioA_zzf_table1.csv      per-edge Table 1 rows
-  outputs/scenarioA_zzf_table1_full.csv all 30 directed cells
+  outputs/scenarioA_submitted_table1.csv      per-edge Table 1 rows
+  outputs/scenarioA_submitted_table1_full.csv all 30 directed cells
 
 Usage:
-  python scripts/34_scenarioA_zzf.py --probe            # 1 realization, clean
+  python scripts/34_scenarioA_submitted.py --probe            # 1 realization, clean
                                                         # world, per-pair F/p
                                                         # diagnostics
-  python scripts/34_scenarioA_zzf.py --quick            # smoke test (3 x 40)
-  python scripts/34_scenarioA_zzf.py                    # full run (20 x 200)
+  python scripts/34_scenarioA_submitted.py --quick            # smoke test (3 x 40)
+  python scripts/34_scenarioA_submitted.py                    # full run (20 x 200)
 """
 
 import os, sys, argparse, warnings
@@ -72,11 +72,11 @@ TRUE_EDGES = [('NGRIP', 'EDC_dD', 0.8), ('CO2', 'CH4', 1.5),
               ('Cariaco', 'Cheng', 2.3)]
 
 # Common-forcing Z generator parameters (module constants so Scenario B,
-# scripts/38, can override them before calling generate_zzf).
+# scripts/38, can override them before calling generate_submitted).
 RHO_F = 0.6      # AR(1) persistence of Z (Table S1/S5)
 Z_SIGMA = 0.8    # AR(1) innovation sigma of Z (fixed across scenarios)
 
-# ZZF supplementary Table S1 generator parameters.
+# Submitted supplementary Table S1 generator parameters.
 # Cariaco age error: 0.23 ka measured median (paper's 0.50 is a typo; the
 # paper's own lambda = |L|/sigma_driver column gives 2.3/0.23 = 10.0).
 S1_PARAMS = {
@@ -118,12 +118,12 @@ def _load_empirical_errors(span):
 
 
 # ---------------------------------------------------------------------------
-# Generator (ZZF Table S1)
+# Generator (submitted Table S1)
 # ---------------------------------------------------------------------------
-def generate_zzf(seed, with_gen_errors, span=58.0, orbital=False,
+def generate_submitted(seed, with_gen_errors, span=58.0, orbital=False,
                  err_sigma=None, rng=None):
     """
-    Scenario A generator per ZZF supplementary Table S1.
+    Scenario A generator per submitted supplementary Table S1.
 
     err_sigma: per-record constant sigma, or None to sample each point's
     sigma from the empirical per-point error distribution.
@@ -304,7 +304,7 @@ def run_realization(seed, n_perturb, sigma_map, span, orbital, args):
             return {v: True for v in VAR_ORDER}
         return adf_flags(residuals)
 
-    data, t, Z = generate_zzf(seed, False, span=span, orbital=orbital)
+    data, t, Z = generate_submitted(seed, False, span=span, orbital=orbital)
     res = layer2(data, mode=args.deconfound, alpha=args.alpha, Z=Z)
     flags = flags_for(res)
     L = aic_lag(res, flags, args.maxlag)
@@ -315,7 +315,7 @@ def run_realization(seed, n_perturb, sigma_map, span, orbital, args):
     det0 = test_pairs(res, flags, args.maxlag, args.test)
     noerr_det = set(det0)
 
-    data_e, t_e, Z_e = generate_zzf(seed, True, span=span, orbital=orbital)
+    data_e, t_e, Z_e = generate_submitted(seed, True, span=span, orbital=orbital)
     res_e = layer2(data_e, mode=args.deconfound, alpha=args.alpha, Z=Z_e)
     flags_e = flags_for(res_e)
     L_e = aic_lag(res_e, flags_e, args.maxlag)
@@ -349,7 +349,7 @@ def run_realization(seed, n_perturb, sigma_map, span, orbital, args):
 # ---------------------------------------------------------------------------
 def probe(args):
     span = float(args.span)
-    data, t, Z = generate_zzf(42, False, span=span, orbital=args.orbital)
+    data, t, Z = generate_submitted(42, False, span=span, orbital=args.orbital)
     res = layer2(data, mode=args.deconfound, alpha=args.alpha, Z=Z)
     flags = adf_flags(res)
     L = aic_lag(res, flags, args.maxlag)
@@ -376,7 +376,7 @@ def probe(args):
 
     print("\n--- with errors: one perturb draw (scrambled), F at lags ---")
     sigma_map = dict(S1_PARAMS['age'])
-    data_e, t_e, Z_e = generate_zzf(42, True, span=span, orbital=args.orbital)
+    data_e, t_e, Z_e = generate_submitted(42, True, span=span, orbital=args.orbital)
     res_e = layer2(data_e, mode=args.deconfound, alpha=args.alpha, Z=Z_e)
     flags_e = adf_flags(res_e)
     L_e = aic_lag(res_e, flags_e, args.maxlag)
@@ -408,9 +408,9 @@ def main():
     ap.add_argument('--realizations', type=int, default=20)
     ap.add_argument('--perturb', type=int, default=200)
     ap.add_argument('--span', type=float, default=58.0,
-                    help='series span end (ka); ZZF spec = 58')
+                    help='series span end (ka); submitted spec = 58')
     ap.add_argument('--orbital', action='store_true',
-                    help='add 40-ka orbital sinusoid to Z (not in ZZF spec)')
+                    help='add 40-ka orbital sinusoid to Z (not in submitted spec)')
     ap.add_argument('--alpha', type=float, default=ARC_ALPHA)
     ap.add_argument('--deconfound', choices=['keep', 'altproxy', 'ztrue', 'zraw'],
                     default='keep')
@@ -463,7 +463,7 @@ def main():
     # The empirical per-point distributions are degenerate (constant per
     # record, verified), so the perturbation loop uses the same values.
     sigma_map = dict(S1_PARAMS['age'])
-    print(f"Scenario A ZZF run: span={args.span} orbital={args.orbital} "
+    print(f"Scenario A submitted run: span={args.span} orbital={args.orbital} "
           f"deconfound={args.deconfound} alpha={args.alpha} test={args.test} "
           f"errmode={args.errmode} {n_real} x {n_pert}", flush=True)
 
@@ -509,7 +509,7 @@ def main():
         'passes_95': (max(ctl_err) if ctl_err else 0.0) >= 0.95,
     })
     df = pd.DataFrame(rows)
-    out_csv = os.path.join(OUTPUT_DIR, 'scenarioA_zzf_table1.csv')
+    out_csv = os.path.join(OUTPUT_DIR, 'scenarioA_submitted_table1.csv')
     df.to_csv(out_csv, index=False)
     print(f"\nSaved: {out_csv}\n")
     print(df.to_string(index=False))
@@ -528,7 +528,7 @@ def main():
                 'robustness_with_error_median': float(np.median(err_med[(src, dst)])),
                 'passes_95_with_error': float(np.median(err_med[(src, dst)])) >= 0.95,
             })
-    full_csv = os.path.join(OUTPUT_DIR, 'scenarioA_zzf_table1_full.csv')
+    full_csv = os.path.join(OUTPUT_DIR, 'scenarioA_submitted_table1_full.csv')
     pd.DataFrame(full_rows).to_csv(full_csv, index=False)
     print(f"Saved: {full_csv}")
 

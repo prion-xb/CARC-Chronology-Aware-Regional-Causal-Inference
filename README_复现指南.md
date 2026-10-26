@@ -9,17 +9,17 @@
 论文有两个版本，数字不同：
 
 - **现行工作文件 Research Pape5.docx** ← 对应 **run22f canonical 系列**（下表"现行论文"列）。
-- **最终投稿版 CARC_v3_final-ZZF.docx** ← 其实现代码**已丢失**，仓库里是重建系列（`34–39`，目标数字见 [PLAN_ZZF_reimplementation.md](PLAN_ZZF_reimplementation.md)）。
+- **最终投稿版 CARC_v3_final-ZZF.docx** ← 其实现代码**已丢失**，仓库里是重建系列（`34–39`，目标数字见 [PLAN_submitted_reimplementation.md](PLAN_submitted_reimplementation.md)）。
 
 ## 论文产物 → 脚本映射
 
-| 论文产物 | 现行论文（canonical） | ZZF 重建（目标版） | 盘上输出 |
+| 论文产物 | 现行论文（canonical） | 投稿版重建（目标版） | 盘上输出 |
 | :--- | :--- | :--- | :--- |
-| Table 1（Scenario A） | `scripts/22_scenarioA_final.py`（run22f：α=0.5/force/aic_f/test_joint/maxlag=50；β=0.25 行 = 6.0/6.5/4.5） | `scripts/34_scenarioA_zzf.py`（目标 70/60/96） | `outputs/scenarioA_final_table1.csv` |
-| Table 2（CCM/PCMCI） | `scripts/39_table2_zzf.py`（重建选择，见下） | 同左（原版丢失） | `outputs/table2_zzf_ccm_pcmci.csv` |
-| Table 4（六窗口） | `scripts/06_conditional_causality.py`（**lagonly** 口径） | `scripts/35_table4_zzf.py`（`--all-pairs` → S5 180 格，目标 max 54.0） | `outputs/conditional_causality_allpairs.csv` / `outputs/table4_zzf*.csv` |
-| Table 5（相位） | `scripts/08_regional_phase_lag.py` | `scripts/37_phase_zzf.py` | — |
-| §4.3 区域对 | `scripts/09_regional_robustness.py` → `scripts/17_regional_pairwise_matrix.py`（**min-p** 口径） | `scripts/36_regional_zzf.py` | `outputs/regional_robustness_windows.csv` |
+| Table 1（Scenario A） | `scripts/22_scenarioA_final.py`（run22f：α=0.5/force/aic_f/test_joint/maxlag=50；β=0.25 行 = 6.0/6.5/4.5） | `scripts/34_scenarioA_submitted.py`（目标 70/60/96） | `outputs/scenarioA_final_table1.csv` |
+| Table 2（CCM/PCMCI） | `scripts/39_table2_ccm_pcmci.py`（重建选择，见下） | 同左（原版丢失） | `outputs/table2_ccm_pcmci.csv` |
+| Table 4（六窗口） | `scripts/06_conditional_causality.py`（**lagonly** 口径） | `scripts/35_table4_submitted.py`（`--all-pairs` → S5 180 格，目标 max 54.0） | `outputs/conditional_causality_allpairs.csv` / `outputs/table4_submitted*.csv` |
+| Table 5（相位） | `scripts/08_regional_phase_lag.py` | `scripts/37_phase_submitted.py` | — |
+| §4.3 区域对 | `scripts/09_regional_robustness.py` → `scripts/17_regional_pairwise_matrix.py`（**min-p** 口径） | `scripts/36_regional_submitted.py` | `outputs/regional_robustness_windows.csv` |
 | Table S2/S4（记录账目） | `scripts/01_preprocess_data.py` + `data/data_tiers_final.csv` | — | `data/` |
 | Table S5（全对扫描） | `scripts/19_full_pairwise_scan.py`（standard + nonoise/noage/noarc/alldiff 消融，分片续跑） | — | `outputs/pairwise_scan/` |
 | Table S6 / Fig.5（审查） | `scripts/41_scrutinization_figure.py` | — | `outputs/table_s6_scrutiny_profile.csv` |
@@ -29,7 +29,7 @@
 | Fig. 2(a) MC FPR 曲线（§2.2） | `scripts/45_fig2a_fpr_sweep.py` | — | `outputs/fig2a_mc_sweep.csv` |
 | §5.3 误差压缩 | `scripts/24_age_error_scaling.py` | — | `outputs/age_error_scaling*.csv` |
 | 滑窗 Fig.7 | `scripts/15_sliding_window_carc.py` | — | — |
-| Scenario B | （论文已删，保持删除） | `scripts/38_scenarioB_zzf.py` | `outputs/scenarioB_zzf_tableS6.csv` |
+| Scenario B | （论文已删，保持删除） | `scripts/38_scenarioB.py` | `outputs/scenarioB_tableS6.csv` |
 | 出版物图 | `scripts/13_publication_figures.py` | — | `figures/` |
 | figures_new 重建图 | `scripts/fignew/01–19`（规划见主仓库 `figures_new/README_规划.md`） | — | `figures_new/` |
 

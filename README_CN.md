@@ -103,7 +103,7 @@ python scripts/11_generate_figures.py
 | 论文产物 | 脚本 | 输出（运行后） |
 | :--- | :--- | :--- |
 | Table 1（Scenario A，20×200） | `scripts/22_scenarioA_final.py` | `outputs/scenarioA_final_table1.csv` |
-| Table 2（CCM / PCMCI） | `scripts/39_table2_zzf.py` | `outputs/table2_zzf_ccm_pcmci.csv` |
+| Table 2（CCM / PCMCI） | `scripts/39_table2_ccm_pcmci.py` | `outputs/table2_ccm_pcmci.csv` |
 | Table 4 / Table S4（六个气候窗口，180 有向格） | `scripts/06_conditional_causality.py` | `outputs/conditional_causality_allpairs.csv` |
 | Table 5（区域相位滞后） | `scripts/08_regional_phase_lag.py` | — |
 | Table S5（80 记录全对扫描 + 消融） | `scripts/19_full_pairwise_scan.py` | `outputs/pairwise_scan/` |
@@ -118,7 +118,7 @@ python scripts/11_generate_figures.py
 ```bash
 cd scripts
 python 22_scenarioA_final.py --quick    # Table 1 冒烟（2×40）
-python 39_table2_zzf.py --quick         # Table 2 冒烟（1×20）
+python 39_table2_ccm_pcmci.py --quick         # Table 2 冒烟（1×20）
 ```
 
 Table 2 另需 `tigramite>=5.0`（PCMCI/ParCorr）；CCM 列为 numpy 实现（已对

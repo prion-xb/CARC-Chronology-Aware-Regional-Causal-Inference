@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-38_scenarioB_zzf.py
+38_scenarioB.py
 -------------------
 Scenario B rebuild (supplementary Section S6, Tables S5-S6): robustness of
 the sub-threshold finding to parameter variation under "more favourable
@@ -39,12 +39,12 @@ Table S6 targets (200 perturbations, ARC alpha=0.5):
   12 negative controls 15-17   (Theorem 3 FPR bound for Scenario B: ~0.18)
 
 Outputs:
-  outputs/scenarioB_zzf_tableS6.csv       per-edge Table S6 rows x maxlag
-  outputs/scenarioB_zzf_tableS6_full.csv all 30 directed cells x maxlag
+  outputs/scenarioB_tableS6.csv       per-edge Table S6 rows x maxlag
+  outputs/scenarioB_tableS6_full.csv all 30 directed cells x maxlag
 
 Usage:
-  python scripts/38_scenarioB_zzf.py --quick   # smoke test (3 x 40)
-  python scripts/38_scenarioB_zzf.py           # full run (20 x 200)
+  python scripts/38_scenarioB.py --quick   # smoke test (3 x 40)
+  python scripts/38_scenarioB.py           # full run (20 x 200)
 """
 
 import os, sys, argparse, warnings, importlib.util
@@ -59,7 +59,7 @@ from src.config import OUTPUT_DIR
 # reuse the Scenario A generator + pipeline machinery (scripts/34);
 # Scenario B overrides the module-level parameter tables below.
 _spec = importlib.util.spec_from_file_location(
-    'reg34', os.path.join(os.path.dirname(__file__), '34_scenarioA_zzf.py'))
+    'reg34', os.path.join(os.path.dirname(__file__), '34_scenarioA_submitted.py'))
 reg34 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(reg34)
 
@@ -137,7 +137,7 @@ def run_config(n_real, n_pert, span, maxlag, test, noise_mode,
         # per realization: Layer 2 once on the clean series; the ADF and
         # per-pair AIC gates are fixed for the 200 draws (scripts/35
         # structure: only the perturbation varies across draws).
-        data, t, Z = reg34.generate_zzf(seed_base + r, False, span=span)
+        data, t, Z = reg34.generate_submitted(seed_base + r, False, span=span)
         res = reg34.layer2(data, mode='keep', alpha=reg34.ARC_ALPHA, Z=Z)
         flags = reg34.adf_flags(res)
         Lmap = {}
@@ -260,7 +260,7 @@ def main():
                 all_full.extend(full)
 
     df = pd.DataFrame(all_rows)
-    out_csv = os.path.join(OUTPUT_DIR, 'scenarioB_zzf_tableS6.csv')
+    out_csv = os.path.join(OUTPUT_DIR, 'scenarioB_tableS6.csv')
     df.to_csv(out_csv, index=False)
     print(f"\nSaved: {out_csv}\n")
     print(df.to_string(index=False))
@@ -268,7 +268,7 @@ def main():
           "Cariaco->Cheng 20.9, controls 15-17 "
           "(Theorem 3 FPR bound for Scenario B: ~0.18)")
 
-    full_csv = os.path.join(OUTPUT_DIR, 'scenarioB_zzf_tableS6_full.csv')
+    full_csv = os.path.join(OUTPUT_DIR, 'scenarioB_tableS6_full.csv')
     pd.DataFrame(all_full).to_csv(full_csv, index=False)
     print(f"Saved: {full_csv}")
 

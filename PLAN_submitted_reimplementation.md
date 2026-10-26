@@ -1,4 +1,4 @@
-# ZZF 版（最终版）重建实施方案与工作日志
+# 最终投稿版重建实施方案与工作日志
 
 > 撰写日期：2026-08-18（本次更新：同日夜间，含仓库整理与 P1 成果核对）
 > 目的：说明**基于什么**重建代码、**已经做了什么**、**希望达到什么效果**、**成果如何**、**什么正在运行**。
@@ -14,7 +14,7 @@
 
 两版核心数字对比：
 
-| 项目 | 新版 ZZF（目标） | 旧版 edited（现行代码） |
+| 项目 | 新版（目标） | 旧版 edited（现行代码） |
 | :--- | :--- | :--- |
 | Scenario A 合成（有误差） | **70% / 60% / 96%**，控制组 0% | 6.0% / 6.5% / 4.5%，控制组最大 7.25% |
 | Scenario A 合成（无误差） | 三边 100%，控制组 0% | 控制组平均稳健性 55%（虚假显著） |
@@ -25,7 +25,7 @@
 | 六窗口最大稳健性 | 41.5%（H4，Cariaco→Cheng） | 45.0% |
 | Scenario B | 有：边 18.5/17.0/20.9，控制组 15–17%（理论 ~18%） | 无 |
 
-**任务**：以新版（ZZF）的论文文本 + 补充材料为规格书，重建实现代码，使仓库输出与最终投稿版一致。
+**任务**：以新版（最终投稿版）的论文文本 + 补充材料为规格书，重建实现代码，使仓库输出与最终投稿版一致。
 
 ---
 
@@ -82,8 +82,8 @@ H1 14–18 / H4 36–40 / B-A 12.7–14.7 / LGM 19–26 / GI12 44–47 / GS12 47
 
 侦查确认现有代码已覆盖约 80% 的机械结构，主要差异在**参数与管线选择**：
 
-- 管线：`granger`（[src/granger.py](src/granger.py)，AIC 1–5 + min-p F，默认 M=200、95% 阈值）符合 ZZF 规格；ADF 差分在各脚本内联；去混叠 [src/arc.py](src/arc.py)（α=0.5）；堆叠 [src/stacking.py](src/stacking.py)（7 个区域桶、中位数、σ=0.5 ka）
-- 合成生成器：[src/synthetic.py](src/synthetic.py) 的 Z（ρ=0.6 + 25 脉冲）与三条边结构已就位；**ZZF Table S1 参数已硬编码在 [scripts/21_scenarioA_table1.py](scripts/21_scenarioA_table1.py)（S1_PARAMS，第 69–78 行）**，但现行规范 run22f 用的是数据校准参数（[scripts/22_scenarioA_final.py](scripts/22_scenarioA_final.py)：α=0.5/force/aic_f/test_joint/maxlag=50）——这正是两版数字不同的根源
+- 管线：`granger`（[src/granger.py](src/granger.py)，AIC 1–5 + min-p F，默认 M=200、95% 阈值）符合最终投稿版规格；ADF 差分在各脚本内联；去混叠 [src/arc.py](src/arc.py)（α=0.5）；堆叠 [src/stacking.py](src/stacking.py)（7 个区域桶、中位数、σ=0.5 ka）
+- 合成生成器：[src/synthetic.py](src/synthetic.py) 的 Z（ρ=0.6 + 25 脉冲）与三条边结构已就位；**最终投稿版 Table S1 参数已硬编码在 [scripts/21_scenarioA_table1.py](scripts/21_scenarioA_table1.py)（S1_PARAMS，第 69–78 行）**，但现行规范 run22f 用的是数据校准参数（[scripts/22_scenarioA_final.py](scripts/22_scenarioA_final.py)：α=0.5/force/aic_f/test_joint/maxlag=50）——这正是两版数字不同的根源
 - 六窗口分析 [scripts/06_conditional_causality.py](scripts/06_conditional_causality.py)；区域稳健性 [scripts/09_regional_robustness.py](scripts/09_regional_robustness.py)；相位 [scripts/08_regional_phase_lag.py](scripts/08_regional_phase_lag.py)；误差压缩 [scripts/24_age_error_scaling.py](scripts/24_age_error_scaling.py)；CCM/PCMCI（[src/validation.py](src/validation.py)，pyEDM legacy=True、tigramite ParCorr）+ [scripts/27_method_validation_final.py](scripts/27_method_validation_final.py)（现磁盘 CSV 只是 2×10 冒烟测试）；滑窗 [scripts/15_sliding_window_carc.py](scripts/15_sliding_window_carc.py)；Fig2 框架图 [scripts/32_framework_figure.py](scripts/32_framework_figure.py)
 
 ---
@@ -112,7 +112,7 @@ H1 14–18 / H4 36–40 / B-A 12.7–14.7 / LGM 19–26 / GI12 44–47 / GS12 47
 - **待补 → 已完成（2026-08-18）**：逐点年代误差已核对。SISALv2（Reading 数据档案，DOI 10.17864/1947.256）与 SISALv3（Oxford ORA，DOI 10.5287/ora-2nanwp4rk，902 实体）两版均含 `lin_interp_age_uncert`；Lapa 相关实体逐点误差统计：603（548 点）RMS 1.36 ka（尾部 10% 达 1.8–6.2 ka，中位数仅 0.034）、606 RMS 0.36、605 RMS 0.21、91 RMS 0.11、709 RMS 0.05、708 RMS 0.20、711 RMS 0.45；Bacon/Bchron/copRa 等其他年龄模型列亦无任一给出合并记录 RMS≈0.39。**判定**：论文 161 行 "about 0.39 ka" 是**标量常数**（其自身算术自洽：配对 RMS 0.45 = mean(0.39, 0.50)），丢失实现未使用逐点库误差。已按此生成 [proxy_errors/Lapa_d18O_err.csv](proxy_errors/Lapa_d18O_err.csv)（逐点常数 0.39 ka）并写入 [src/config.py](src/config.py) `SPECIAL_SIGMA['Lapa_d18O']=0.39`。
 - **合并组合判定（2026-08-18）**：丢失实现的 tier 行（1402 点、12.0845–56.3258 ka）与任何可得的 SISAL 版本组合均不精确相符（v3 库中不存在 12.0845/56.3258 这两个年龄点；604 LSF3_2018 在两版库中均无 lin_interp 年龄，1402 假设排除）。**按用户文件重建**：Sem Fim 五实体 91+603+605+606+709 = **1399 点、10.0073–56.3874 ka**（tier 行偏差 −3 点、边界第 4 位小数，属导出版本噪声，如实记录；Grande 三实体被排除——若含 614/615 会使上限 >56.33 与 tier 行矛盾）。产出 [proxy_records/Lapa_d18O.csv](proxy_records/Lapa_d18O.csv)（无表头两列）。管线验证：`classify_record`→(speleothem, South_America) ✓、`get_sigma`→0.39 ✓、`load_record`/`load_all_records` 正常读入（注：`read_record_df` 对无表头 CSV 吃首行是管线既有行为，所有记录同等受影响，未动）。
 
-### 3.4 P1：Scenario A 重建（[scripts/34_scenarioA_zzf.py](scripts/34_scenarioA_zzf.py)）✅ 完成（全量核对表见 §7）
+### 3.4 P1：Scenario A 重建（[scripts/34_scenarioA_submitted.py](scripts/34_scenarioA_submitted.py)）✅ 完成（全量核对表见 §7）
 
 **代码**：Table S1 参数（Cariaco=0.23 实测）、Z=ρ0.6+25 脉冲、逐点经验误差（六文件均逐点恒定，经验≡常数）、Layer2 四种去混叠模式（keep/altproxy/ztrue/zraw）、ADF→AIC→min-p F、`--perdraw`（论文 3.4 的顺序：每扰动对**干净序列**施加单次 1σ 扰动 → 每扰动内重跑 Layer 2 + ADF/AIC 门）、块 Gram 加速 F 检验。
 
@@ -126,7 +126,7 @@ H1 14–18 / H4 36–40 / B-A 12.7–14.7 / LGM 19–26 / GI12 44–47 / GS12 47
 
 ## 4. 希望达到什么效果
 
-1. **可复现性**：仓库代码完整实现新版（ZZF）描述的方法与参数，逐项重跑后输出与论文数字一致（或差异经排查后在可解释范围内），使 GitHub 仓库成为论文的单一事实来源。
+1. **可复现性**：仓库代码完整实现新版（最终投稿版）描述的方法与参数，逐项重跑后输出与论文数字一致（或差异经排查后在可解释范围内），使 GitHub 仓库成为论文的单一事实来源。
 2. **主要目标数字**（逐项核对）：
    - Scenario A：无误差 100%/100%/100% + 0% 控制组；有误差 ~70/~60/**96**% + 0% 控制组
    - Scenario B：18.5/17.0/20.9，控制组 15–17%
@@ -204,7 +204,7 @@ Table1–5.xlsx + Table S1–S6.xlsx 共 11 个，**全部为 7 月旧版数字�
 
 ### 7.1 P1 Scenario A
 
-**正式核对表（全量 20 次实现 × 200 扰动，canonical 配置：perdraw、keep、α=0.5、maxlag 50、min-p F；输出 [outputs/scenarioA_zzf_table1.csv](outputs/scenarioA_zzf_table1.csv) / [_full.csv](outputs/scenarioA_zzf_table1_full.csv)）**：
+**正式核对表（全量 20 次实现 × 200 扰动，canonical 配置：perdraw、keep、α=0.5、maxlag 50、min-p F；输出 [outputs/scenarioA_submitted_table1.csv](outputs/scenarioA_submitted_table1.csv) / [_full.csv](outputs/scenarioA_submitted_table1_full.csv)）**：
 
 | 行 | 无误差稳健性 | 有误差稳健性 | 通过 95% |
 | :--- | :--- | :--- | :--- |
@@ -228,7 +228,7 @@ Table1–5.xlsx + Table S1–S6.xlsx 共 11 个，**全部为 7 月旧版数字�
 3. ❌ **控制组 0% 无法复现**——数学上不可能，这是规格内在矛盾：n=960 下两列独立 AR(1)（φ≥0.72）残差 + min-p F(0.05)，单对假阳率≈100%，8 种去混叠配置实测控制组稳健性全部 1.00。论文 Layer 4 自述"95% 是观察到零假阳的最低阈值、90% 会漏入偶发假边"意味着其实现的控制组逐次显著率约 90–94%（Table 1 "0%" 只能理解为"0/12 通过 95% 过滤器"）；即便如此我们的 100% 也无法通过过滤器。
 4. **按用户决议处理**：数字冲突时规格为准；以上偏差如实报告（本文件即报告），P8 时同步论文；绝不伪造。
 
-### 7.2 P2 Table 4（[scripts/35_table4_zzf.py](scripts/35_table4_zzf.py)，正式核对表见 [outputs/table4_zzf_vs_paper.md](outputs/table4_zzf_vs_paper.md)）
+### 7.2 P2 Table 4（[scripts/35_table4_submitted.py](scripts/35_table4_submitted.py)，正式核对表见 [outputs/table4_submitted_vs_paper.md](outputs/table4_submitted_vs_paper.md)）
 
 配置：逐扰动重跑 Layer 2（α=0.5；非 NGRIP 对用 1-ka NGRIP 趋势，NGRIP 对中 NGRIP 用自身 >5 ka 低通）→ ADF 0.05 门 → AIC 滞后（上限 5）→ **F 只在 AIC 所选滞后上做（lagonly）** → M=200。实测 vs 论文（%，括弧内为论文值）：
 
@@ -243,12 +243,12 @@ Table1–5.xlsx + Table S1–S6.xlsx 共 11 个，**全部为 7 月旧版数字�
 
 **三个关键实现判定**（如实报告）：
 
-1. **F 检验语义 = lagonly**：逐滞后 min-p 在六窗口实测 80–95%（H1 Cariaco→Cheng 92%），与论文全部 <41.5% 严重不符；lagonly 落到 7.5–26% 且 H1 Cariaco→Cheng 23.5 精确命中 24.5。论文 3.3 原句"F 检验在 AIC 所选滞后上"即此语义。**这反过来解释 Scenario A 的 96% 矛盾更尖锐**（lagonly + 1–5 滞后窗在数学上测不到 16/30/46 步注入边，0% 检出），maxlag=50+minp 仍是唯一可测配置（已记入 §7.1 结论与 outputs/scenarioA_zzf_table1_comparison.md）。
+1. **F 检验语义 = lagonly**：逐滞后 min-p 在六窗口实测 80–95%（H1 Cariaco→Cheng 92%），与论文全部 <41.5% 严重不符；lagonly 落到 7.5–26% 且 H1 Cariaco→Cheng 23.5 精确命中 24.5。论文 3.3 原句"F 检验在 AIC 所选滞后上"即此语义。**这反过来解释 Scenario A 的 96% 矛盾更尖锐**（lagonly + 1–5 滞后窗在数学上测不到 16/30/46 步注入边，0% 检出），maxlag=50+minp 仍是唯一可测配置（已记入 §7.1 结论与 outputs/scenarioA_submitted_table1_comparison.md）。
 2. **B-A/GS-12 = 0.0 按论文自己的解释实现**（论文 129 行：窄窗 + AR(1) 强自相关 → 有效样本量不足 VAR 拟合，数据充分性而非因果缺失）：实现为"跨度 ≤2 ka 窗口稳健性记 0.0"，与论文逐格一致。
 3. **CO₂ 对 "—"**：按论文 Table 4 注实现（该对六窗不评估）。
 4. 剩余 ~2 倍偏差（H1 Cheng→Cariaco 16.0 vs 37.0、H4 Cariaco→Cheng 15.0 vs 41.5 等）属真实数据 + 未知实现细节（AIC 对象、去混叠代理细节）不可完全复原；**论文三个诊断结论全部复现**：全部 <<95%、方向近对称、主导方向随机漂移（Theorem 1 共同强迫指纹）。P8 同步论文时以本表为准。
 
-### 7.3 P3/P4 区域堆叠 + 误差压缩（[scripts/36_regional_zzf.py](scripts/36_regional_zzf.py)，正式核对表见 [outputs/regional_zzf_vs_paper.md](outputs/regional_zzf_vs_paper.md)）
+### 7.3 P3/P4 区域堆叠 + 误差压缩（[scripts/36_regional_submitted.py](scripts/36_regional_submitted.py)，正式核对表见 [outputs/regional_submitted_vs_paper.md](outputs/regional_submitted_vs_paper.md)）
 
 **关键发现：论文 Layer 3 存在双语义**（与 §7.2 的 lagonly 判定互补）：
 
@@ -269,7 +269,7 @@ Table1–5.xlsx + Table S1–S6.xlsx 共 11 个，**全部为 7 月旧版数字�
 
 **P8 同步项**：§4.3 的 H1 89.5% → 94.0%（其余窗口实测值一并补全）；"最接近 95%"措辞按实测改为 H1/H4/LGM 均在地板附近；§5.3 的 35% 穿越点陈述改写为实测行为（或保留为定性讨论并注明不可复现）。
 
-### 7.4 P5 Scenario B（[scripts/38_scenarioB_zzf.py](scripts/38_scenarioB_zzf.py)，正式核对表见 [outputs/scenarioB_zzf_vs_paper.md](outputs/scenarioB_zzf_vs_paper.md)）
+### 7.4 P5 Scenario B（[scripts/38_scenarioB.py](scripts/38_scenarioB.py)，正式核对表见 [outputs/scenarioB_submitted_vs_paper.md](outputs/scenarioB_submitted_vs_paper.md)）
 
 Table S5 参数覆盖 + 20 实现 × 200 扰动全量（4 配置：lagonly/min-p × σ_ε std/variance；canonical = lagonly + std + maxlag 5 + perdraw，论文 3.3 语义）：
 
@@ -283,7 +283,7 @@ Table S5 参数覆盖 + 20 实现 × 200 扰动全量（4 配置：lagonly/min-p
 
 **结论：Table S6 不可复现**。决定性指纹 = Cariaco→Cheng：论文在假阳地板（20.9），重建在全部配置下检出 84–100%（0.3 ka = 6 步滞后经 AR(1) φ=0.5 记忆投影到 AIC 所选滞后——AIC 在 n≈940 下饱和于 1–5 上限——故真实边对任何 F 窗都可见）。结构性排查已排除 σ_ε 读法（std/variance）、min-p/lagonly、dt=0.02/0.01（SNR 以 ka 计与 dt 无关，n 增大只使 F 更敏感；控制组中位数在 dt≤0.02 时 15–16% 与论文 15–17% 部分吻合，但边分数不吻合）。丢失实现让 0.3 ka 边完全不可见的唯一可能（其 AIC 选择落在 L≤2）依赖其生成器随机抽取，无法复原。与 P1/P3 同类：**P8 按 canonical 实测值重写 S6 与正文 §4.1 "Scenario B verification" 段**。
 
-### 7.5 P6 Table 2 CCM/PCMCI（[scripts/39_table2_zzf.py](scripts/39_table2_zzf.py)，正式核对表见 [outputs/table2_zzf_vs_paper.md](outputs/table2_zzf_vs_paper.md)）
+### 7.5 P6 Table 2 CCM/PCMCI（[scripts/39_table2_ccm_pcmci.py](scripts/39_table2_ccm_pcmci.py)，正式核对表见 [outputs/table2_submitted_vs_paper.md](outputs/table2_submitted_vs_paper.md)）
 
 CCM 部分重写为 numpy 向量化版（cKDTree 单纯形投影，6.7 ms/次 skill，与 pyEDM 2.5 对验一致至 ~0.03；pyEDM 本身 12 s/次不可用）。**方向判别探针结论（已定案）**：在 Scenario A 共同强迫生成器下，Cariaco→Cheng 的干净级交叉映射不对称符号为负（−0.05 ~ −0.09，α=0.5 与 1.0 均如此），收敛斜率判据为抛硬币（真边检出率 0.47–0.60 vs 控制 max 0.67）——即 CCM 方向性在该生成器下不可恢复，这是实质发现而非实现缺陷（共同强迫 Z 在两变量上的主导性强于因果耦合 0.4×AR 记忆）。PCMCI（tigramite 5.x ParCorr，系统级每 draw 一次）冒烟可检出最强边 20/20。**全量 5×200 中位数已出**：
 
@@ -296,7 +296,7 @@ CCM 部分重写为 numpy 向量化版（cKDTree 单纯形投影，6.7 ms/次 sk
 
 结论：CCM 全列在控制地板以下（最强边 0.0%——方向性完全失效）；PCMCI 检出强边（97.5%）但控制组地板饱和至 98.0%，95% 过滤器在两种替代检验器下均无法隔离假阳——与 P1 同机制。论文 Table 2 的"暂定待重跑"列按本表替换（P8 项 F1/F2），CCM 方向不可恢复性作为实质发现写入 §4.1/§5.4 一句。
 
-### 7.6 P7 Table 5 相位（[scripts/37_phase_zzf.py](scripts/37_phase_zzf.py)，正式核对表见 [outputs/phase_zzf_vs_paper.md](outputs/phase_zzf_vs_paper.md)）
+### 7.6 P7 Table 5 相位（[scripts/37_phase_submitted.py](scripts/37_phase_submitted.py)，正式核对表见 [outputs/phase_submitted_vs_paper.md](outputs/phase_submitted_vs_paper.md)）
 
 **phase-80 全量（80 记录 / 6 区域分配 data/region_assignment_80_paper.csv，NA 不除杂、
 单次 0.5 ka 低通、200 draws，2026-08-19）**：论文 Table 5 的 21 行中 **10/21 达标一致
@@ -328,7 +328,7 @@ attains 95%"吻合。结构性结论：±2.0 ka 搜索边界饱和现象双方�
 29084，2026-08-19 落地）：10101 格（21 对 × 481 窗，2.0 ka/0.1 ka）中 842 格（8.3%）
 ≥95%、max 1.0、14/21 对与 344/481 窗至少一格 ≥95%——**不支持旧稿"滑窗无方向 ≥95%"句，
 但该句在现版已删**（现版 §4.4 仅存 GS-12 窄窗句，80/6 下已验证 ✓），故无需改动；
-数据存档 outputs/phase_zzf_sliding.csv（如需可再跑 80/6 滑窗变体）。
+数据存档 outputs/phase_submitted_table5_sliding.csv（如需可再跑 80/6 滑窗变体）。
 
 ---
 
@@ -349,7 +349,7 @@ G Table 5 保留+重建一致性说明**。docx 已同步（outputs/_edit_docx_p
 - **M2/M3** §3.4/§4.1 检验器措辞按 Table 2 实测改写（CCM 下全 <8.5%；PCMCI 单边 97.5%
   但控制地板 98.0%；"real records 三检验器均次阈值"改为实测可支撑表述）；
 - **M4** Table 2 provisional 列 → 实测（CCM 4.0/0.5/0.0、PCMCI 41.0/42.5/97.5）+ 注改指
-  仓库 scripts/39_ccm_pcmci_zzf.py + 控制上限 8.5%/98.0%；
+  仓库 scripts/39_table2_ccm_pcmci.py + 控制上限 8.5%/98.0%；
 - **M5** Fig. 2 框架图嵌入 docx + "Fig.2 |"→"Fig. 2 |"；
 - **M6** §4.1 所选配置补"汇集 σ=√((σ₁²+σ₂²)/2)（Fig. S8）"短语——探针 bxt83q4qt 证实
   按记录 σ 变体（7.0/53.0/48.0、控制 46.5%）与 min-p 变体（100% 饱和）均不能再生

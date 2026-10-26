@@ -231,7 +231,7 @@ def export_figF():
 # ---------------------------------------------------------------------------
 
 def export_supp():
-    ph = pd.read_csv(os.path.join(OUT, "phase_zzf_sliding.csv"))
+    ph = pd.read_csv(os.path.join(OUT, "phase_submitted_table5_sliding.csv"))
     keep = ph.groupby(["region_A", "region_B"]).size().nlargest(3).index
     ph2 = ph[ph.set_index(["region_A", "region_B"]).index.isin(keep)]
     write(ph2, "figS6_phase_heatmap")

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-37_phase_zzf.py
+37_phase_submitted.py
 ---------------
-ZZF-pipeline phase-difference analysis on the millennial-trend band
+submitted-pipeline phase-difference analysis on the millennial-trend band
 (paper Section 4.4, Table 5) plus the sliding-window network-coupling
 peak analysis (2.0 ka wide, 0.1 ka step).
 
@@ -37,8 +37,8 @@ the North Atlantic composite -> single 0.5-ka pass (no second smoothing in
 the phase loop) and the --na-raw variant of scripts/36.
 
 Outputs:
-  outputs/phase_zzf_table5.csv      per pair-window consistency + median lag
-  outputs/phase_zzf_sliding.csv     sliding-window max consistency per pair
+  outputs/phase_submitted_table5.csv      per pair-window consistency + median lag
+  outputs/phase_submitted_table5_sliding.csv     sliding-window max consistency per pair
 """
 
 import os, sys, re, argparse, warnings, importlib.util
@@ -96,7 +96,7 @@ PAPER_T5 = {
 
 # reuse scripts/36 loading + per-draw stack machinery (same seed -> same draws)
 _spec = importlib.util.spec_from_file_location(
-    'reg36', os.path.join(os.path.dirname(__file__), '36_regional_zzf.py'))
+    'reg36', os.path.join(os.path.dirname(__file__), '36_regional_submitted.py'))
 reg36 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(reg36)
 
@@ -164,7 +164,7 @@ def main():
                          'against the per-draw NA stack (current Sec 5.4)')
     ap.add_argument('--obs-noise', action='store_true',
                     help='5% observational noise per perturbation member')
-    ap.add_argument('--out', default='phase_zzf_table5',
+    ap.add_argument('--out', default='phase_submitted_table5',
                     help='output basename under outputs/')
     args = ap.parse_args()
 
