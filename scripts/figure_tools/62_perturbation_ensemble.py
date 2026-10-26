@@ -42,11 +42,11 @@ XCORR_MAX_KA = 3.0           # lead-lag search half-window
 
 # driver -> target, with display labels. Ordered by combined sigma.
 PAIRS = [
-    ("16_MD2622ODP1002-Mo", "14_cheng2016composite-noaa",
+    ("Cariaco_Mo", "Cheng2016_d18O",
      "Cariaco Mo", "Chinese speleothem δ¹⁸O"),
-    ("Erhardt_NGRIP_aerosol_d18O_step1", "32_Bereiter et al.-2015-GRL-revised CO2 ",
+    ("NGRIP_d18O", "EDC_CO2",
      "NGRIP δ¹⁸O", "EDC CO₂"),
-    ("2_ODP983-IRD", "3_Mcmanus-ODP980-d18O",
+    ("ODP983_IRD", "ODP980_benthic_d18O",
      "ODP 983 IRD", "ODP 980 δ¹⁸O"),
 ]
 

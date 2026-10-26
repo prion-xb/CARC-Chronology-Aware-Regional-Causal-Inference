@@ -24,7 +24,7 @@ OUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)))), "figures_new", "01_basic_record")
 
 
-def main(record_id: str = "Erhardt_NGRIP_aerosol_d18O_step1"):
+def main(record_id: str = "NGRIP_d18O"):
     rec = read_record(record_id)
     err = read_error(record_id)
 
@@ -74,5 +74,5 @@ def err_is_scalar(err) -> bool:
 
 
 if __name__ == "__main__":
-    rid = sys.argv[1] if len(sys.argv) > 1 else "Erhardt_NGRIP_aerosol_d18O_step1"
+    rid = sys.argv[1] if len(sys.argv) > 1 else "NGRIP_d18O"
     main(rid)

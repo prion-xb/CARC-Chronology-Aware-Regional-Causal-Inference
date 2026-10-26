@@ -112,7 +112,7 @@ def load_record(stem, data_dir=None):
     Load a paleoclimate record by its stem name or full filename.
 
     Matching strategy (first match wins):
-    1. Exact filename match (e.g. 'Erhardt_NGRIP_aerosol_d18O_step1.csv')
+    1. Exact filename match (e.g. 'NGRIP_d18O.csv')
     2. Prefix/stem match (e.g. stem='NGRIP_d18O' matches files starting with that)
 
     Parameters
@@ -303,10 +303,10 @@ def load_all_records(data_dir=None, age_min=10.0, age_max=60.0, min_points=10):
 
 def load_canonical_stems():
     """The paper's 80-record inventory: data/region_assignment_80_paper.csv
-    (76 clean keys covering 80 repository file stems; 4 keys split into 2
-    files each).  The data directory holds 83 in-range files - the 3 extras
-    (15_Ba, 15_Br, Lapa_d18O) are not in the paper and must not enter
-    analyses anchored on the 80-record set (Table S2/S4)."""
+    (80 clean keys, one repository file stem per key).  The data directory
+    holds 83 in-range files - the 3 extras (MD04-2881_Ba_128-760ka,
+    MD04-2881_Br_128-760ka, Lapa_d18O) are not in the paper and must not
+    enter analyses anchored on the 80-record set (Table S2/S4)."""
     csv = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                        'data', 'region_assignment_80_paper.csv')
     df = pd.read_csv(csv, encoding='utf-8-sig')

@@ -45,7 +45,7 @@ Pipeline (paper Section 3, per-draw order):
   * robustness = fraction of the 200 draws with a significant edge.
 
 Record-level pairing Lapa -> ODP983 (paper 4.3/5.3): sigma 0.39 ka (Lapa)
-and 0.50 ka (ODP983-IRD), pair RMS 0.45 ka = mean(0.39, 0.50). The paper
+and 0.50 ka (ODP983_IRD), pair RMS 0.45 ka = mean(0.39, 0.50). The paper
 target: H1 event robustness 89.5% (Lapa -> ODP983). Error-scaling sweeps
 scales {1.0..0.2} x sigma and reports the first scale whose robustness
 reaches 95% (paper: about 0.35).
@@ -305,7 +305,7 @@ def run_analysis(n_draws, windows, rng, na_proxy_mode='ngrip1k',
         print(f"  {r}  ({g})")
 
     # --- NGRIP trend proxy (fixed across draws) ---
-    ngrip_series = load_grid_series('Erhardt_NGRIP_aerosol_d18O_step1.csv',
+    ngrip_series = load_grid_series('NGRIP_d18O.csv',
                                     AGE_GRID_10_60)
     if ngrip_series[0] is None:
         raise RuntimeError('NGRIP record not loadable')
@@ -353,7 +353,7 @@ def run_analysis(n_draws, windows, rng, na_proxy_mode='ngrip1k',
 
     # --- record-level Lapa -> ODP983 (legacy paper section; opt-in) ---
     lapa = load_grid_series('Lapa_d18O.csv', AGE_GRID_10_60)
-    odp = load_grid_series('2_ODP983-IRD.csv', AGE_GRID_10_60)
+    odp = load_grid_series('ODP983_IRD.csv', AGE_GRID_10_60)
     pair_rows, scaling_rows = [], []
     if do_lapa and lapa[0] is not None and odp[0] is not None:
         pair_rows = record_pair_windows(lapa[0], odp[0], ngrip_trend,

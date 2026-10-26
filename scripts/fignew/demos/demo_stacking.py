@@ -28,9 +28,9 @@ OUT = os.path.join(ROOT, "figures_new", "demos")
 
 # three North Atlantic records, chosen to span very different ages & units
 DEMO_RECORDS = [
-    ("Erhardt_NGRIP_aerosol_d18O_step1", "NGRIP δ¹⁸O (‰)", CAT1),
-    ("2_ODP983-IRD", "ODP 983 IRD (%)", CAT2),
-    ("6_U1308-Si-Sr=0-800kyr", "U1308 Si/Sr", CAT3),
+    ("NGRIP_d18O", "NGRIP δ¹⁸O (‰)", CAT1),
+    ("ODP983_IRD", "ODP 983 IRD (%)", CAT2),
+    ("U1308_SiSr", "U1308 Si/Sr", CAT3),
 ]
 
 

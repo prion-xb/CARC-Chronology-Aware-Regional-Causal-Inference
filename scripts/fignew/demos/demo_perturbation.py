@@ -42,7 +42,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
 OUT = os.path.join(ROOT, "figures_new", "demos")
 
 # ------------------------------------------------------------- parameters ---
-RECORD_ID = "Erhardt_NGRIP_aerosol_d18O_step1"
+RECORD_ID = "NGRIP_d18O"
 GRID = np.arange(10, 60.001, 0.05)   # canonical 10-60 ka grid @ 0.05 ka
 LOWPASS_KA = 0.5                     # Layer-1 event-scale filter
 SIGMA_KA = 0.65                      # marginal 1-sigma of each age model

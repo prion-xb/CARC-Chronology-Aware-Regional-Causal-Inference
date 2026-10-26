@@ -95,12 +95,12 @@ VAR_ORDER = ['NGRIP', 'EDC_dD', 'CO2', 'CH4', 'Cariaco', 'Cheng']
 # empirical error distributions). All six are constant per point, so the
 # empirical distribution is degenerate at the value below.
 ERR_FILES = {
-    'NGRIP':   'proxy_errors/Erhardt_NGRIP_aerosol_d18O_step1_err.csv',
-    'EDC_dD':  'proxy_errors/32_Jouzel-2007-dD_err.csv',
-    'CO2':     'proxy_errors/32_Bereiter et al.-2015-GRL-revised CO2 _err.csv',
-    'CH4':     'proxy_errors/32_CH4 over past 800kyr_err.csv',
-    'Cariaco': 'proxy_errors/16_MD2622ODP1002-Mo_err.csv',
-    'Cheng':   'proxy_errors/14_cheng2016composite-noaa_err.csv',
+    'NGRIP':   'proxy_errors/NGRIP_d18O_err.csv',
+    'EDC_dD':  'proxy_errors/EDC_dD_err.csv',
+    'CO2':     'proxy_errors/EDC_CO2_err.csv',
+    'CH4':     'proxy_errors/EDC_CH4_err.csv',
+    'Cariaco': 'proxy_errors/Cariaco_Mo_err.csv',
+    'Cheng':   'proxy_errors/Cheng2016_d18O_err.csv',
 }
 
 REPO = os.path.join(os.path.dirname(__file__), '..')

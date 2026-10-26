@@ -106,7 +106,8 @@ def run_analysis():
     records, grid = load_all_records(DATA_DIR, age_min=10.0, age_max=60.0)
 
     # Restrict to the paper's 80-record inventory (Table S2/S4); the data
-    # directory's extra files (15_Ba, 15_Br, Lapa_d18O) are not in the paper.
+    # directory's extra files (MD04-2881_Ba_128-760ka, MD04-2881_Br_128-760ka,
+    # Lapa_d18O) are not in the paper.
     records = filter_canonical_records(records)
 
     # Merge Southern Ocean into Antarctic — paper's "Antarctic/Southern Ocean"

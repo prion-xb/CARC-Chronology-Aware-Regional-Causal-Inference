@@ -105,13 +105,13 @@ RUNGS = (0.95, 0.90, 0.85, 0.80, 0.75, 0.70)
 
 # §4.3 named records: stem -> (expected value, profile column)
 NAMED = {
-    "19_Rodbell2022-junin-GI": (87, "total"),
-    "5_U1302-U1303_d18O": (86, "total"),
-    "33_Dome fuji-dD": (84, "total"),
-    "5_U1302-U1303_Ca_Sr": (31, "recov_noage"),
-    "8-1_MD01-2443-4=0-420ka Uk37-SST": (29, "recov_noage"),
-    "1_elgygytgyn2012-Si-Ti=0-800kyr": (27, "recov_noage"),
-    "18_IPWP OHC-stack": (52, "recov_noarc"),
+    "Junin_GI": (87, "total"),
+    "U1302-3_d18O": (86, "total"),
+    "DomeFuji_dD": (84, "total"),
+    "U1302-3_CaSr": (31, "recov_noage"),
+    "MD01-2443_UK37_SST": (29, "recov_noage"),
+    "Elgygytgyn_SiTi": (27, "recov_noage"),
+    "IPWP_OHC": (52, "recov_noarc"),
 }
 
 

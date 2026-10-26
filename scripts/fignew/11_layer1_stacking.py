@@ -115,9 +115,10 @@ def fit_ar1(x):
 
 def load_canonical_stems():
     """The paper's 80-record inventory: data/region_assignment_80_paper.csv
-    (76 clean keys covering 80 repository file stems; 4 keys split into 2
-    files each).  proxy_records/ holds 83 files - the 3 extras (15_Ba,
-    15_Br, Lapa_d18O) are not in the paper and must not enter Fig. 2."""
+    (80 rows, one repository file stem per row, mirroring Table S2).
+    proxy_records/ holds 83 files - the 3 extras (MD04-2881_Ba_128-760ka,
+    MD04-2881_Br_128-760ka, Lapa_d18O) are not in the paper and must not
+    enter Fig. 2."""
     df = pd.read_csv(os.path.join(ROOT, "data",
                                   "region_assignment_80_paper.csv"),
                      encoding="utf-8-sig")
@@ -142,9 +143,8 @@ def load_region_dict():
     the Layer-1 stacks count it under North Atlantic."""
     records, _ = load_all_records(DATA_DIR, age_min=10.0, age_max=60.0)
     stems = load_canonical_stems()
-    # one repository filename carries a trailing space before its
-    # extension ('32_Bereiter et al.-2015-GRL-revised CO2 .xlsx') - strip
-    # on both sides of the comparison
+    # strip on both sides of the comparison for robustness against
+    # whitespace in the CSV mapping
     records = [(i, s, r, n.strip()) for i, s, r, n in records
                if n.strip() in stems]
     assert len(records) == 80, f"canonical 10-60 ka load = {len(records)}"

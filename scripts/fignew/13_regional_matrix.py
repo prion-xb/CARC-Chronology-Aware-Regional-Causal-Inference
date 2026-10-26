@@ -34,7 +34,8 @@ Convergence targets (asserted):
   per-pair median |A->B - B->A|: max = 0.145, all < 0.3 (no yellow border)
   all 21 Table 5 pair-windows map onto finite cells (21 stars)
   stack composition = canonical 80-record inventory (Table S2/S4):
-  13/18/34/6/3/6 (non-inventory files 15_Ba, 15_Br, Lapa_d18O excluded)
+  13/18/34/6/3/6 (non-inventory files MD04-2881_Ba_128-760ka,
+  MD04-2881_Br_128-760ka, Lapa_d18O excluded)
 
 Usage:
     python scripts/fignew/13_regional_matrix.py

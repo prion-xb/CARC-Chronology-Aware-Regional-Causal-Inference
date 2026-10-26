@@ -73,7 +73,7 @@ def load_metrics():
                 stems.append(s)
                 tiers.append(r["Tier"])
 
-    # stripped stem -> path (Bereiter's file carries a trailing space)
+    # stripped stem -> path
     fmap = {os.path.splitext(fn)[0].strip(): os.path.join(DATA_DIR, fn)
             for fn in os.listdir(DATA_DIR)
             if fn.endswith((".csv", ".xlsx"))}
@@ -182,7 +182,7 @@ def main():
     counts = df["tier"].value_counts().to_dict()
     assert counts == {"Tier 1": 7, "Tier 2": 48, "Tier 3": 25}, counts
     assert df["sigma"].notna().all(), "missing sigma"
-    ngr = df[df["stem"] == "Erhardt_NGRIP_aerosol_d18O_step1"].iloc[0]
+    ngr = df[df["stem"] == "NGRIP_d18O"].iloc[0]
     assert abs(ngr["sigma"] - 0.65) < 1e-9, f"NGRIP sigma = {ngr['sigma']}"
     print(f"anchors: 80 records, tiers {counts}")
     print(f"span: min {df['span'].min():.1f} / P50 {df['span'].median():.1f}"

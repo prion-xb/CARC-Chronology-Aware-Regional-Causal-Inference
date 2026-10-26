@@ -5,20 +5,24 @@
 ### `proxy_records/`
 Raw paleoclimate proxy time series (CSV format, 2 columns: age [ka], proxy value).
 
-**Naming**: file names preserve the original dataset identifiers (site/core and
-proxy) verbatim — including spaces, Greek letters and degree signs — so each
-file maps one-to-one onto the record names in the paper's Table S1/S2.
+**Naming**: file names are scientific record identifiers (site/core and proxy,
+joined with underscores) — one file per Table S1/S2 record — so each file maps
+one-to-one onto the record names in the paper's Table S1/S2. Records split
+over two files carry their window in the name (e.g. `U1313_SST_2.7Ma.csv`).
 
 Examples:
-- `2_ODP983-IRD.csv` — ODP 983 (North Atlantic) ice-rafted debris
-- `32_Jouzel-2007-dD.csv` — EPICA Dome C δD (Jouzel et al., 2007)
-- `16-1_ODP 184-1143-UK37_SST=800ka.csv` — ODP 1143 UK'37 SST, 0–800 ka
-- `14_cheng2016composite-noaa.xlsx` — Cheng et al. (2016) speleothem composite (xlsx)
+- `ODP983_IRD.csv` — ODP 983 (North Atlantic) ice-rafted debris
+- `EDC_dD.csv` — EPICA Dome C δD (Jouzel et al., 2007)
+- `ODP1143_UK37_SST.csv` — ODP 1143 UK'37 SST
+- `Cheng2016_d18O.xlsx` — Cheng et al. (2016) speleothem composite (xlsx)
 
 **Important**: Some files have headers, some don't. The `src/io.py` module auto-detects
 the age and value columns.
 
-**File count**: 83 data files (80 CSV + 3 XLSX) covering 33 numbered site groups.
+**File count**: 83 files = the paper's 80-record inventory (Table S1/S2) plus
+3 extras not used in the paper (MD04-2881_Ba_128-760ka, MD04-2881_Br_128-760ka,
+Lapa_d18O). Three inventory files are XLSX (EDC_CO2, MD00-2361_d18O,
+Cheng2016_d18O); the rest are CSV.
 
 ### `proxy_errors/`
 Age-model 1σ uncertainty files. Each file corresponds to a record in `proxy_records/`

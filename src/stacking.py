@@ -20,7 +20,7 @@ def classify_record(filename):
     Parameters
     ----------
     filename : str
-        Record filename (e.g. '32_Jouzel-2007-dD.csv').
+        Record filename (e.g. 'EDC_dD.csv').
 
     Returns
     -------
@@ -68,11 +68,11 @@ def classify_record(filename):
                                  'jouzel', 'bereiter', 'neem', 'ch4 over past']):
         region = 'Antarctic'
     elif any(k in name for k in ['odp1090', 'odp1094', 'u1537', 'ps75',
-                                 'md97-2021', 'jaccard']):
+                                 'md97-2120', 'jaccard']):
         region = 'Southern_Ocean'
     # North Atlantic & Nordic Seas
     elif any(k in name for k in ['ngrip', 'odp983', 'odp980', 'u1302', 'u1308',
-                                 'u1313', 'u1391', 'framstrait', 'barker', 'mcmanus',
+                                 'u1391', 'framstrait', 'barker', 'mcmanus',
                                  'susceptibility=kappa', 'nps', 'rpi']):
         region = 'North_Atlantic'
     # East Asian Monsoon (speleothems + Chinese Loess Plateau)
@@ -86,10 +86,10 @@ def classify_record(filename):
     elif any(k in name for k in ['cariaco', 'odp1089', 'odp1143', 'odp1146', 'odp967',
                                  'odp663', 'odp1002', 'odp184', 'ipwp',
                                  'kx97322', 'u1446', 'u1476', 'u1483', 'u1542',
-                                 'u1385', 'md01-2443', 'md-2518', 'md-2519',
-                                 'g.ruber', 'g_ruber', 'd18og.rub', 'md2622', 'clemens', 'naafs',
+                                 'u1385', 'md01-2443', 'md01-2518', 'md01-2519',
+                                 'md05-2925', 'md2622', 'clemens', 'naafs',
                                  'ohc-stack', 'malawi', 'odp 184',
-                                 'ln k-al', 'ln ti-ca',
+                                 'm125', 'u1313',
                                  'md00-2361', 'log fe-ca', 'log zr-fe',
                                  'sst=0-2.7', 'ba=128', 'br.csv']):
         region = 'Tropical'

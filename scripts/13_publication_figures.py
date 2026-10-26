@@ -119,11 +119,10 @@ def load_record_quality():
     """Load quality metrics for the paper's canonical 80-record inventory.
 
     The paper anchors every analysis on 80 records (Tier 1/2/3 = 7/48/25;
-    Table S2/S4/S5). The repository stores those 80 under their original
-    file-stem names (outputs/data_tiers_final.csv), while
-    data/region_assignment_80_paper.csv maps each paper record key
-    (canonical name — the same keys used by RECORD_COORDS) to its stem(s):
-    76 keys, four of which split into two stems each, for 80 rows total.
+    Table S2/S4/S5). The repository stores those 80 under scientific file
+    stems, one per paper record key (outputs/data_tiers_final.csv, written
+    by scripts/01_preprocess_data.py), and data/region_assignment_80_paper.csv
+    lists the same 80 stems one per row, mirroring Table S2.
 
     Returns one row per stem with columns:
       Record (stem), Key (paper name), Tier, Region (paper region code),

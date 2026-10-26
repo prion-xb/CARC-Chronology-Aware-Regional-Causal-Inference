@@ -499,7 +499,7 @@ def print_anchors(rates, pairs, rows, counts, mx, prof, cal):
     q = np.percentile(prof.S_max, [0, 25, 50, 75, 100])
     assert np.allclose(q, [0.27, 0.44, 0.535, 0.66, 0.92], atol=1e-9), q
     assert abs(top.S_max - 0.92) < 1e-9 and top.record == \
-        "27_ODP 1094=Jaccard2013=Ba-Fe", f"top record drifted: {top.record}"
+        "ODP1094_BaFe", f"top record drifted: {top.record}"
     assert abs(fac.min() - 1.155) < 0.05, fac.min()
     assert abs(fac.median() - 4.928) < 0.05, fac.median()
     assert abs(fac.max() - 6.214) < 0.05, fac.max()

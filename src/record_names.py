@@ -1,11 +1,12 @@
 """
 Standardized display names for the 80-record 10-60 ka dataset.
 
-Record identifiers used inside the pipeline are repository file stems
-(e.g. ``23-1_log Fe-Ca=800ka``); paper figures and Table S6 use the
-standardized short names defined here (e.g. ``MD00-2361 log Fe/Ca``),
-keyed through the clean record keys of data/region_assignment_80_paper.csv
-(the same naming as the paper's Section 4.3 and Table S2 inventory).
+Record identifiers used inside the pipeline are repository file stems,
+which carry the same scientific names as the clean record keys of
+data/region_assignment_80_paper.csv (e.g. ``MD00-2361_logFeCa``); paper
+figures and Table S6 use the standardized short names defined here
+(e.g. ``MD00-2361 log Fe/Ca``), keyed through those keys (the same
+naming as the paper's Section 4.3 and Table S2 inventory).
 """
 
 import os
@@ -27,9 +28,11 @@ DISPLAY_NAMES = {
     'U1308_RPI': 'U1308 RPI',
     'U1308_SiSr': 'U1308 Si/Sr',
     'U1302-3_MS': 'U1302-U1303 MS',
-    'U1302-3_SiSr': 'U1302-U1303 Ca/Sr',
+    'U1302-3_CaSr': 'U1302-U1303 Ca/Sr',
+    'U1302-3_SiSr': 'U1302-U1303 Si/Sr',
     'U1302-3_d18O': 'U1302-U1303 δ¹⁸O',
-    'U1313_SST': 'U1313 SST',
+    'U1313_SST_2.7Ma': 'U1313 SST (2.7 Ma)',
+    'U1313_SST_0-2.7Ma': 'U1313 SST (0–2.7 Ma)',
     # Antarctic / Southern Ocean
     'EDC_dD': 'EDC δD',
     'EDC_CO2': 'EDC CO₂',
@@ -54,6 +57,7 @@ DISPLAY_NAMES = {
     'U1542_SST': 'U1542 SST',
     'U1542_CHC': 'U1542 CHC',
     'U1385_ZrSr': 'U1385 Zr/Sr',
+    'U1385_CaTi': 'U1385 Ca/Ti',
     'MD01-2443_CaTi': 'MD01-2443 Ca/Ti',
     'MD01-2443_UK37_SST': 'MD01-2443 alkenone SST',
     'U1446_RbCa': 'U1446 Rb/Ca',
@@ -64,6 +68,7 @@ DISPLAY_NAMES = {
     'MD01-2519_DSR': 'MD01-2519 DSR',
     'ODP967_Dust': 'ODP 967 Ba/Al',
     'ODP967_WetDryIndex': 'ODP 967 wet–dry',
+    'ODP967_WetDryIndex_800ka': 'ODP 967 wet–dry (800 ka)',
     'ODP1089_SST': 'ODP 1089 SST',
     'U1483_benthic_d18O': 'U1483 benthic δ¹⁸O',
     'U1483_logKCa': 'U1483 log K/Ca',
@@ -103,19 +108,6 @@ DISPLAY_NAMES = {
 }
 
 
-# Two clean keys in region_assignment_80_paper.csv each cover two distinct
-# proxy files, so the clean-key lookup alone gives both files the same name and
-# mislabels one of them. Tables S2/S6 were corrected by hand to the actual
-# measured ratio; these overrides put the same correction in the code so
-# regenerated figures agree with the tables.
-FILE_ID_OVERRIDES = {
-    '5_U1302-U1303_Ca_Sr': 'U1302-U1303 Ca/Sr',
-    '5_U1302-U1303_Si_Sr': 'U1302-U1303 Si/Sr',
-    '9_U1385=Zr-Sr LR04 age model': 'U1385 Zr/Sr',
-    '9_U1385-Ca-Ti': 'U1385 Ca/Ti',
-}
-
-
 def _raw_to_display():
     """Map repository file stem -> display name via the paper's clean
     record keys (data/region_assignment_80_paper.csv)."""
@@ -126,7 +118,6 @@ def _raw_to_display():
             raw = raw.strip()
             if raw:
                 table[raw] = DISPLAY_NAMES.get(clean, clean)
-    table.update(FILE_ID_OVERRIDES)
     return table
 
 

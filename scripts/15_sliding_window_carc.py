@@ -275,12 +275,12 @@ def _load_proxy_for_plotting(pair, age_grid):
     X_name, Y_name = pair
     # Map pair names to config keys
     name_to_file = {
-        'NGRIP': ('NGRIP', 'Erhardt_NGRIP_aerosol_d18O_step1.csv'),
-        'EDC_dD': ('EDC_dD', '32_Jouzel-2007-dD.csv'),
-        'EDC_CO2': ('EDC_CO2', '32_Bereiter et al.-2015-GRL-revised CO2 .xlsx'),
-        'EDC_CH4': ('EDC_CH4', '32_CH4 over past 800kyr.csv'),
-        'Cariaco': ('Cariaco', '16_MD2622ODP1002-Mo.csv'),
-        'Cheng2016': ('Cheng2016', '14_cheng2016composite-noaa.xlsx'),
+        'NGRIP': ('NGRIP', 'NGRIP_d18O.csv'),
+        'EDC_dD': ('EDC_dD', 'EDC_dD.csv'),
+        'EDC_CO2': ('EDC_CO2', 'EDC_CO2.xlsx'),
+        'EDC_CH4': ('EDC_CH4', 'EDC_CH4.csv'),
+        'Cariaco': ('Cariaco', 'Cariaco_Mo.csv'),
+        'Cheng2016': ('Cheng2016', 'Cheng2016_d18O.xlsx'),
     }
 
     def _load_one(name):

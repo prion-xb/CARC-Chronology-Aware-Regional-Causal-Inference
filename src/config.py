@@ -92,52 +92,52 @@ DEFAULT_SIGMA = {
 # Override map: record_name → age-model name (e.g. 'NGRIP_d18O': 'GICC05')
 RECORD_AGE_MODEL = {
     # Ice cores — AICC2012 / GICC05
-    '32_Jouzel-2007-dD':                        'AICC2012',
-    '32_Bereiter et al.-2015-GRL-revised CO2 ': 'AICC2012',
-    '32_CH4 over past 800kyr':                  'AICC2012',
-    '32_EDC-dust-2012-no NaN':                  'AICC2012',
-    '33_Dome fuji 2018 d18O':                   'AICC2012',
-    '33_Dome fuji-dD':                          'AICC2012',
-    'Erhardt_NGRIP_aerosol_d18O_step1':         'GICC05',
+    'EDC_dD':                       'AICC2012',
+    'EDC_CO2':                      'AICC2012',
+    'EDC_CH4':                      'AICC2012',
+    'EDC_Dust':                     'AICC2012',
+    'DomeFuji_d18O':                'AICC2012',
+    'DomeFuji_dD':                  'AICC2012',
+    'NGRIP_d18O':                   'GICC05',
     # Marine — LR04 / orbitally-tuned
-    '2_ODP983-IRD':                             'LR04',
-    '3_ODP980-δ18O_Planktic':                   'LR04',
-    '3_Mcmanus-ODP980-d18O':                    'LR04',
-    '6_313-U1308_rpi':                          'LR04',
-    '9_U1385-Ca-Ti':                            'LR04',
-    '9_U1385=Zr-Sr LR04 age model':             'LR04',
-    '16_MD2622ODP1002-Mo':                      '14C',
+    'ODP983_IRD':                   'LR04',
+    'ODP980_planktic_d18O':         'LR04',
+    'ODP980_benthic_d18O':          'LR04',
+    'U1308_RPI':                    'LR04',
+    'U1385_CaTi':                   'LR04',
+    'U1385_ZrSr':                   'LR04',
+    'Cariaco_Mo':                   '14C',
     # Speleothems — U-Th
-    '14_cheng2016composite-noaa':               'Speleothem',
+    'Cheng2016_d18O':               'Speleothem',
 }
 
 # Override map: record_name → sigma_ka (1σ age uncertainty)
 SPECIAL_SIGMA = {
     # Tier 1 records (from published age-model literature, matched to Table S1)
-    'Erhardt_NGRIP_aerosol_d18O_step1':         0.65,
-    '32_Jouzel-2007-dD':                        0.83,
-    '32_Bereiter et al.-2015-GRL-revised CO2 ': 1.65,
-    '32_CH4 over past 800kyr':                  1.66,
-    '16_MD2622ODP1002-Mo':                      0.23,
-    '14_cheng2016composite-noaa':               0.14,
-    '32_EDC-dust-2012-no NaN':                  1.50,   # AICC2012, per err file
+    'NGRIP_d18O':                   0.65,
+    'EDC_dD':                       0.83,
+    'EDC_CO2':                      1.65,
+    'EDC_CH4':                      1.66,
+    'Cariaco_Mo':                   0.23,
+    'Cheng2016_d18O':               0.14,
+    'EDC_Dust':                     1.50,   # AICC2012, per err file
     # Other high-quality records
-    '33_Dome fuji 2018 d18O':                   1.50,
-    '33_Dome fuji-dD':                          1.50,
-    '2_ODP983-IRD':                             2.00,
-    'Lapa_d18O':                                0.39,   # paper line 161 "about 0.39 ka";
-                                                       # pair RMS 0.45 = mean(0.39, 0.50)
+    'DomeFuji_d18O':                1.50,
+    'DomeFuji_dD':                  1.50,
+    'ODP983_IRD':                   2.00,
+    'Lapa_d18O':                    0.39,   # paper line 161 "about 0.39 ka";
+                                            # pair RMS 0.45 = mean(0.39, 0.50)
 }
 
 # Tier 1 core records (Table 1–4 in paper): label → filename in proxy_records/
 # Labels are the canonical variable names used in scripts 05/06/15 and the paper.
 TIER1_FILES = {
-    'NGRIP':      'Erhardt_NGRIP_aerosol_d18O_step1.csv',
-    'EDC_dD':     '32_Jouzel-2007-dD.csv',
-    'EDC_CO2':    '32_Bereiter et al.-2015-GRL-revised CO2 .xlsx',
-    'EDC_CH4':    '32_CH4 over past 800kyr.csv',
-    'Cariaco':    '16_MD2622ODP1002-Mo.csv',
-    'Cheng2016':  '14_cheng2016composite-noaa.xlsx',
+    'NGRIP':      'NGRIP_d18O.csv',
+    'EDC_dD':     'EDC_dD.csv',
+    'EDC_CO2':    'EDC_CO2.xlsx',
+    'EDC_CH4':    'EDC_CH4.csv',
+    'Cariaco':    'Cariaco_Mo.csv',
+    'Cheng2016':  'Cheng2016_d18O.xlsx',
 }
 
 # Tier 1 sigma overrides: label → sigma_ka

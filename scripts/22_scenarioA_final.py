@@ -117,12 +117,12 @@ AGE_ERR = {'NGRIP': TIER1_SIGMA['NGRIP'],
            'Cheng': TIER1_SIGMA['Cheng2016']}
 
 REC_FILES = {
-    'NGRIP': ('Erhardt_NGRIP_aerosol_d18O_step1.csv', 'csv'),
-    'EDC_dD': ('32_Jouzel-2007-dD.csv', 'csv'),
-    'CO2': ('32_Bereiter et al.-2015-GRL-revised CO2 .xlsx', 'xlsx'),
-    'CH4': ('32_CH4 over past 800kyr.csv', 'csv'),
-    'Cariaco': ('16_MD2622ODP1002-Mo.csv', 'csv'),
-    'Cheng': ('14_cheng2016composite-noaa.xlsx', 'xlsx'),
+    'NGRIP': ('NGRIP_d18O.csv', 'csv'),
+    'EDC_dD': ('EDC_dD.csv', 'csv'),
+    'CO2': ('EDC_CO2.xlsx', 'xlsx'),
+    'CH4': ('EDC_CH4.csv', 'csv'),
+    'Cariaco': ('Cariaco_Mo.csv', 'csv'),
+    'Cheng': ('Cheng2016_d18O.xlsx', 'xlsx'),
 }
 
 

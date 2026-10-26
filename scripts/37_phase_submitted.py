@@ -138,7 +138,7 @@ def build_draw_stacks(n_draws, rng, na_proxy_mode='ngrip1k',
             (series[0], series[1], row.Record))
     regions = {r: v for r, v in regions.items() if len(v) >= 2}
     ngrip = reg36.load_grid_series(
-        'Erhardt_NGRIP_aerosol_d18O_step1.csv', AGE_GRID_10_60)
+        'NGRIP_d18O.csv', AGE_GRID_10_60)
     if ngrip[0] is None:
         raise RuntimeError('NGRIP not loadable')
     ngrip_trend = gaussian_filter1d(ngrip[0],
