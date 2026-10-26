@@ -5,18 +5,20 @@
 ### `proxy_records/`
 Raw paleoclimate proxy time series (CSV format, 2 columns: age [ka], proxy value).
 
-**Naming convention**: `{site_id}_{proxy_type}.csv`
+**Naming**: file names preserve the original dataset identifiers (site/core and
+proxy) verbatim — including spaces, Greek letters and degree signs — so each
+file maps one-to-one onto the record names in the paper's Table S1/S2.
 
 Examples:
-- `NGRIP_d18O.csv` — Greenland ice core δ¹⁸O
-- `EDC_dD.csv` — Antarctic EPICA Dome C δD
-- `Cariaco_Mo.csv` — Cariaco Basin sediment molybdenum
-- `Cheng2016_d18O.csv` — Cheng et al. (2016) Asian speleothem composite δ¹⁸O
+- `2_ODP983-IRD.csv` — ODP 983 (North Atlantic) ice-rafted debris
+- `32_Jouzel-2007-dD.csv` — EPICA Dome C δD (Jouzel et al., 2007)
+- `16-1_ODP 184-1143-UK37_SST=800ka.csv` — ODP 1143 UK'37 SST, 0–800 ka
+- `14_cheng2016composite-noaa.xlsx` — Cheng et al. (2016) speleothem composite (xlsx)
 
 **Important**: Some files have headers, some don't. The `src/io.py` module auto-detects
 the age and value columns.
 
-**File count**: ~80 CSV files covering 33 numbered site groups.
+**File count**: 83 data files (80 CSV + 3 XLSX) covering 33 numbered site groups.
 
 ### `proxy_errors/`
 Age-model 1σ uncertainty files. Each file corresponds to a record in `proxy_records/`

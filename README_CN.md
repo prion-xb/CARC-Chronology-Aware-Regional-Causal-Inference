@@ -51,8 +51,10 @@ CARC/
 │   ├── synthetic.py             # 合成数据生成
 │   ├── paleo_generator.py       # PaleoDataGenerator 类
 │   └── validation.py            # 方法评估框架
-├── scripts/                     # 分析驱动脚本 01–63，另有 fignew/ 图件重建系列
-├── Tables/                      # 论文表格 xlsx（随仓库提供的参考版本）
+├── scripts/                     # 编号分析驱动 01–45 + fignew/ 图件重建系列
+│   ├── figure_tools/            # 制图/QA 工具（复现映射之外）
+│   └── manuscript_tools/        # 文稿装配工具（需手稿 docx，不随仓库分发）
+├── Tables/                      # 论文表格 xlsx（投稿审稿期 gitignore，投稿包内随附）
 ├── figures/                     # 生成的图表
 └── outputs/                     # 论文运行的参考输出（CSV）
 ```
@@ -107,6 +109,10 @@ python scripts/11_generate_figures.py
 | Table 4 / Table S4（六个气候窗口，180 有向格） | `scripts/06_conditional_causality.py` | `outputs/conditional_causality_allpairs.csv` |
 | Table 5（区域相位滞后） | `scripts/08_regional_phase_lag.py` | — |
 | Table S5（80 记录全对扫描 + 消融） | `scripts/19_full_pairwise_scan.py` | `outputs/pairwise_scan/` |
+| Table S7（理论 FPR 剖面 + α×τ 门） | `scripts/42_theory_fpr_table.py` | `outputs/tableS7_fpr_profile.csv`、`outputs/tableS7_binomial_gate.csv` |
+| β = 0.25 反解锚点（附录 S4.1） | `scripts/43_pairwise_beta_inversion.py` | `outputs/beta_inversion_pairs.csv` |
+| 定理 2 数值例 MC（§2.2） | `scripts/44_theorem2_montecarlo.py` | `outputs/theorem2_mc_verification.csv` |
+| Fig. 2(a) MC FPR 曲线 | `scripts/45_fig2a_fpr_sweep.py` | `outputs/fig2a_mc_sweep.csv` |
 | §4.3 区域对 | `scripts/09_regional_robustness.py` → `scripts/17_regional_pairwise_matrix.py` | `outputs/regional_robustness_windows.csv` |
 | Table S2 / S4 记录账目 | `scripts/01_preprocess_data.py` + `data/data_tiers_final.csv` | `data/` |
 
@@ -122,7 +128,7 @@ python 39_table2_ccm_pcmci.py --quick         # Table 2 冒烟（1×20）
 ```
 
 Table 2 另需 `tigramite>=5.0`（PCMCI/ParCorr）；CCM 列为 numpy 实现（已对
-pyEDM 2.5 验证到 ~0.03），pyEDM 可选（Windows 需 `legacy=True`）。
+pyEDM 2.5 验证），pyEDM 可选（Windows 需 `legacy=True`）。
 
 ## 方法概述
 
@@ -171,9 +177,10 @@ $$FPR \geq 1 - \Phi\left(z_{\alpha} - \sqrt{\lambda_{eff}/2}\right)$$
 
 ## 引用
 
-如在研究中使用 CARC，请引用：
+如在研究中使用 CARC，请引用配套论文（详见 [CITATION.cff](CITATION.cff)）：
 
-> *[论文引用信息 — 发表后补充]*
+> Ruan, X., Wang, H., & Zhang, Z. CARC: Chronology-Aware Regional Causal
+> Inference on Paleoclimate Event Scales. 地学前缘（Earth Science Frontiers），投稿中。
 
 ## 许可证
 

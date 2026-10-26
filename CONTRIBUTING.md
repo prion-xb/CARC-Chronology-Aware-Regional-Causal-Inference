@@ -11,8 +11,8 @@ inference method under active research. We welcome:
 ## Development Setup
 
 ```bash
-git clone https://github.com/prion-xb/CARC-Chronology-Aware-Regional-Consensus-Framework-.git
-cd CARC-Chronology-Aware-Regional-Consensus-Framework-
+git clone https://github.com/prion-xb/CARC-Chronology-Aware-Regional-Causal-Inference.git
+cd CARC-Chronology-Aware-Regional-Causal-Inference
 pip install -r requirements.txt
 cp .env.example .env   # edit paths as needed
 ```
@@ -21,7 +21,10 @@ cp .env.example .env   # edit paths as needed
 
 - **Library code** goes in `src/` with clear docstrings (NumPy style).
 - **Analysis pipelines** go in `scripts/` with a numbered prefix indicating
-  workflow order (01 → 12).
+  workflow order (01–45, the paper reproduction map). Figure-port and QA
+  utilities live in `scripts/figure_tools/`; manuscript-assembly tools live
+  in `scripts/manuscript_tools/`. Both are kept for provenance and are not
+  part of the reproduction map.
 - **Configuration** lives in `src/config.py` — read paths from environment
   variables, not hardcoded absolute paths.
 - **Data** in `proxy_records/` is tracked; generated outputs in `outputs/`

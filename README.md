@@ -1,4 +1,4 @@
-# CARC — Chronology-Aware Regional Consensus Framework
+# CARC: Chronology-Aware Regional Causal Inference on Paleoclimate Event Scales
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://python.org)
@@ -14,7 +14,9 @@ deconfounding and a ≥95% pass rate across the age-perturbation ensemble.
 
 ## Reproducing the paper results
 
-Every table in the paper is produced by a script in `scripts/`. The full
+Every table in the paper is produced by a script in `scripts/` (the numbered
+01–45 series; `scripts/figure_tools/` and `scripts/manuscript_tools/` hold
+auxiliary figure/manuscript tooling outside the reproduction map). The full
 product-to-script map, run instructions, and known caveats are in
 [README_复现指南.md](README_复现指南.md). Summary:
 
@@ -68,12 +70,14 @@ python main.py --method granger      # Standard Granger instead of CARC
 
 ```
 ├── main.py                 # Entry point (demo + full pipeline)
-├── proxy_records/          # 83 proxy record CSV files
+├── proxy_records/          # 83 proxy record data files (80 CSV + 3 XLSX)
 ├── proxy_errors/           # Age-model error files per record
 ├── data/                   # Tier assignments, quality scores, orbital forcing
-├── scripts/                # Analysis drivers 01–63 + fignew/ figure rebuilds
-├── Tables/                 # Paper tables (xlsx, the shipped reference)
-├── outputs/                # Shipped reference outputs of the paper runs
+├── scripts/                # Numbered analysis drivers 01–45 + fignew/ figure rebuilds
+│   ├── figure_tools/       # Figure-port / QA utilities (outside the reproduction map)
+│   └── manuscript_tools/   # Docx assembly tools (require the manuscript, not shipped)
+├── Tables/                 # Paper tables (xlsx; git-ignored until publication, shipped in the submission package)
+├── outputs/                # Reference outputs of the paper runs (git-ignored)
 ├── tests/                  # Unit tests
 ├── src/
 │   ├── records.py          # PaleoRecord ABC + archive-type subclasses
@@ -92,6 +96,7 @@ python main.py --method granger      # Standard Granger instead of CARC
 │   ├── visualization.py    # Publication-quality plotting utilities
 │   ├── geolocation.py      # Record coordinates and regional metadata
 │   └── ...
+├── README_复现指南.md      # Full table → script reproduction map (中文)
 ├── requirements.txt
 ├── pyproject.toml
 └── LICENSE
@@ -103,6 +108,21 @@ python main.py --method granger      # Standard Granger instead of CARC
 - numpy, scipy, pandas, statsmodels, scikit-learn
 - tigramite ≥ 5.0 (Table 2 / PCMCI only)
 - See `requirements.txt` for the full list
+
+## Tests
+
+```bash
+python -m pytest tests/ -v
+```
+
+## Citation
+
+If you use this code in your research, please cite the accompanying paper
+(see [CITATION.cff](CITATION.cff)):
+
+> Ruan, X., Wang, H., & Zhang, Z. CARC: Chronology-Aware Regional Causal
+> Inference on Paleoclimate Event Scales. *Earth Science Frontiers*
+> (submitted).
 
 ## License
 
