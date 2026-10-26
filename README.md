@@ -25,6 +25,10 @@ product-to-script map, run instructions, and known caveats are in
 | Table 4 / Table S4 (six climate windows, 180 directed cells) | `scripts/06_conditional_causality.py` | `outputs/conditional_causality_allpairs.csv` |
 | Table 5 (regional phase lags) | `scripts/08_regional_phase_lag.py` | — |
 | Table S5 (80-record pairwise scan + ablations) | `scripts/19_full_pairwise_scan.py` | `outputs/pairwise_scan/` |
+| Table S7 (theoretical FPR profile + α×τ gate) | `scripts/42_theory_fpr_table.py` | `outputs/tableS7_fpr_profile.csv`, `outputs/tableS7_binomial_gate.csv` |
+| β = 0.25 anchor inversion (App. S4.1) | `scripts/43_pairwise_beta_inversion.py` | `outputs/beta_inversion_pairs.csv` |
+| Theorem 2 numerical-example MC (Sec. 2.2) | `scripts/44_theorem2_montecarlo.py` | `outputs/theorem2_mc_verification.csv` |
+| Fig. 2(a) MC FPR curve | `scripts/45_fig2a_fpr_sweep.py` | `outputs/fig2a_mc_sweep.csv` |
 | §4.3 regional pairs | `scripts/09_regional_robustness.py` → `scripts/17_regional_pairwise_matrix.py` | `outputs/regional_robustness_windows.csv` |
 | Table S2 / S4 record accounting | `scripts/01_preprocess_data.py` + `data/data_tiers_final.csv` | `data/` |
 
