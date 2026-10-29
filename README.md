@@ -121,7 +121,7 @@ If you use this code in your research, please cite the accompanying paper
 (see [CITATION.cff](CITATION.cff)):
 
 > Ruan, X., Wang, H., & Zhang, Z. CARC: Chronology-Aware Regional Causal
-> Inference on Paleoclimate Event Scales. *Earth Science Frontiers*
+> Inference on Paleoclimate Event Scales. *Geoscience Frontiers*
 > (in preparation).
 
 ## License
