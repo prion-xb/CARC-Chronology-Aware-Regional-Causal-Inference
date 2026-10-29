@@ -42,7 +42,7 @@ $RECYCLE.BIN/
 
 # ===========================================================================
 # PROTECTED — unpublished manuscript, tables, and novel analysis outputs
-# These contain findings from a paper currently under review.
+# These contain findings from a paper in preparation.
 # They will be un-ignored upon publication.
 # ===========================================================================
 paper/
